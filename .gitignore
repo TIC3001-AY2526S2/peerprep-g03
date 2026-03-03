@@ -1,1 +1,3 @@
 server/.env
+server/package.json
+server/package-lock.json
