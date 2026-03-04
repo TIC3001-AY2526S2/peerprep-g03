@@ -5,7 +5,7 @@ const { getQuestionsCollection } = require("../db/mongo");
 function validateQuestionPayload(body) {
   if (!body || typeof body !== "object") return "Missing JSON body";
 
-  const { title, description, category, complexity } = body;
+  const { title, description, topics, difficulty } = body;
 
   if (!title || typeof title !== "string" || title.trim().length < 3) {
     return "title is required (string, min 3 chars)";
@@ -13,13 +13,20 @@ function validateQuestionPayload(body) {
   if (!description || typeof description !== "string" || description.trim().length < 10) {
     return "description is required (string, min 10 chars)";
   }
-  if (!category || typeof category !== "string") {
-    return "category is required (string)";
+  if (!Array.isArray(topics) || topics.length === 0) {
+    return "topic(s) is/are required (non-empty array of strings)";
+  }
+  // ensure every element is a non-empty string
+  const badTopic = topics.find(
+    (c) => typeof c !== "string" || c.trim().length === 0
+  );
+  if (badTopic !== undefined) {
+    return "each topic must be a non-empty string";
   }
 
-  const allowedComplexity = ["Easy", "Medium", "Hard"];
-  if (!complexity || typeof complexity !== "string" || !allowedComplexity.includes(complexity)) {
-    return `complexity must be one of: ${allowedComplexity.join(", ")}`;
+  const difficultyLevels = ["Easy", "Medium", "Hard"];
+  if (!difficulty || typeof difficulty !== "string" || !difficultyLevels.includes(difficulty)) {
+    return `difficulty must be one of: ${difficultyLevels.join(", ")}`;
   }
 
   return null;
@@ -52,7 +59,7 @@ async function createQuestion(req, res) {
       return res.status(400).json({ error: validationError });
     }
 
-    const { title, description, category, complexity } = req.body;
+    const { title, description, topics, difficulty } = req.body;
 
     // Prevent duplicates based on same title - to be improved
     const existing = await questionsCollection.findOne({ title: title.trim() });
@@ -60,11 +67,12 @@ async function createQuestion(req, res) {
       return res.status(409).json({ error: "A question with this title already exists" });
     }
 
+    const topicsNormalised = [...new Set(topics.map(c => c.trim()))];
     const newQuestion = {
       title: title.trim(),
       description: description.trim(),
-      category: category.trim(),
-      complexity,
+      topics: topicsNormalised,
+      difficulty,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
