@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const API_BASE = "http://localhost:5000/api/questions";
 
 async function parseResponse(response) {
@@ -24,3 +26,10 @@ export async function updateQuestion(id, payload) {
 
   return parseResponse(response);
 }
+
+
+
+export const getAllQuestions = async () => {
+  const response = await axios.get(API_BASE);
+  return response.data;
+};

@@ -27,6 +27,16 @@ const questionSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    createdAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
+    modifiedAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );

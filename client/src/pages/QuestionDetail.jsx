@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "./QuestionDetail.css";
+import "../styles/QuestionDetail.css";
+import {useParams,useLocation } from "react-router-dom";
 import { getQuestions, updateQuestion } from "../api/questionService";
 
 const initialQuestion = {
@@ -30,10 +31,16 @@ function QuestionDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
-
+    const location = useLocation();
+    const editModeFromLink = location.state?.editMode ?? false;
+    const { id } = useParams(); 
   useEffect(() => {
+    
     const loadFirstQuestion = async () => {
       try {
+        if (editModeFromLink) {
+            setIsEditing(true);
+        }
         const questions = await getQuestions();
         if (!questions.length) {
           setStatusType("error");
@@ -85,9 +92,11 @@ function QuestionDetail() {
         setIsLoading(false);
       }
     };
+    
 
     loadFirstQuestion();
-  }, []);
+  }, [id, editModeFromLink]);
+  
 
   const saveDisabled = useMemo(() => {
     return (
