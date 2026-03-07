@@ -1,33 +1,18 @@
-import React, { useEffect, useState } from "react";
-
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import QuestionDetail from "./pages/QuestionDetail";
+import QuestionList from "./pages/QuestionList";
 function App() {
-  const [questions, setQuestions] = useState([]);
-
-  // Fetch questions on component mount
-  useEffect(() => {
-    fetch("http://localhost:5000/api/questions")
-      .then(res => res.json())
-      .then(data => setQuestions(data))
-      .catch(err => console.error("Failed to fetch questions:", err));
-  }, []);
-
   return (
-    <div>
-      <h1>Questions</h1>
-      {questions.length === 0 ? (
-        <p>No questions found.</p>
-      ) : (
-        <ul>
-          {questions.map(q => (
-            <li key={q._id}>
-              <strong>{q.questionID}: {q.title}</strong>
-              <p>{q.description}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
+      <Router>
+        <Routes>
+          {/* DEFAULT PAGE */}
+          <Route path="/" element={<Navigate to="/admin/questions" />} />
+          <Route path="/admin/questions" element={<QuestionList />} />
+          <Route path="/admin/questions/:id" element={<QuestionDetail />} />
+        </Routes>
+    </Router>
+  )
 }
 
 export default App;
