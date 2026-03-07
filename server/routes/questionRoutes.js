@@ -80,6 +80,15 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// API to delete question id
+router.delete("/:id", async (req, res) => {
+  try {
+    await Question.findByIdAndDelete(req.params.id);
+    res.json({ message: "Question deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete question" });
+  }
+});
 
 
 export default router;

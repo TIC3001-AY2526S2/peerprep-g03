@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getAllQuestions } from "../api/questionService";
+import { getAllQuestions, deleteQuestion } from "../api/questionService";
 import "../styles/QuestionList.css";
 import { Link } from "react-router-dom";
 const QuestionList = () => {
@@ -16,6 +16,11 @@ const QuestionList = () => {
     } catch (error) {
       console.error("Error fetching questions:", error);
     }
+  };
+
+  const handleDelete = async (id) => {
+    await deleteQuestion(id);
+    fetchQuestions();
   };
 
   return (
@@ -64,7 +69,7 @@ const QuestionList = () => {
                     <Link to={`/admin/questions/${q.questionID}`} state={{ editMode: true }} className="btn btn-edit">Edit</Link>
                 </td>
                 <td>
-                    <Link to={`/admin/questions/${q.questionID}`} className="btn btn-delete">Delete</Link>
+                    <button onClick={() => handleDelete(q.questionID)} className="btn btn-delete">Delete</button>
                 </td>
             </tr>
           ))}
