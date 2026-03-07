@@ -1,7 +1,7 @@
 // handler functions
 const { getQuestionsCollection } = require("../db/mongo");
 
-// Simple validation helper
+// simple validation helper
 function validateQuestionPayload(body) {
   if (!body || typeof body !== "object") return "Missing JSON body";
 
@@ -32,6 +32,7 @@ function validateQuestionPayload(body) {
   return null;
 }
 
+// get all questions
 async function getAllQuestions(req, res) {
   try {
     const questionsCollection = getQuestionsCollection();
@@ -47,6 +48,7 @@ async function getAllQuestions(req, res) {
   }
 }
 
+// create new question
 async function createQuestion(req, res) {
   try {
     const questionsCollection = getQuestionsCollection();
