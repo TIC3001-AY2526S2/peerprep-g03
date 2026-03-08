@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "../styles/QuestionDetail.css";
-import {useParams,useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { getQuestions, updateQuestion } from "../api/questionService";
 
 const initialQuestion = {
@@ -31,16 +31,16 @@ function QuestionDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
-    const location = useLocation();
-    const editModeFromLink = location.state?.editMode ?? false;
-    const { id } = useParams(); 
+  const location = useLocation();
+  const editModeFromLink = location.state?.editMode ?? false;
+  const { id } = useParams();
   useEffect(() => {
-    
-    const loadFirstQuestion = async () => {
+    const loadQuestion = async () => {
       try {
         if (editModeFromLink) {
-            setIsEditing(true);
+          setIsEditing(true);
         }
+
         const questions = await getQuestions();
         if (!questions.length) {
           setStatusType("error");
@@ -49,26 +49,40 @@ function QuestionDetail() {
           return;
         }
 
-        const firstQuestion = questions[0];
+        const selectedQuestion =
+          questions.find((q) => String(q.questionID) === String(id)) ||
+          questions.find((q) => String(q.questionId) === String(id)) ||
+          questions.find((q) => String(q._id) === String(id));
+
+        if (!selectedQuestion) {
+          setStatusType("error");
+          setStatusMessage(`Question with ID ${id} was not found.`);
+          setIsLoading(false);
+          return;
+        }
+
         const mappedQuestion = {
-          id: firstQuestion._id,
-          questionID: firstQuestion.questionID ?? "",
-          title: firstQuestion.title || "",
-          description: firstQuestion.description || "",
-          category: firstQuestion.category || "",
-          complexity: firstQuestion.complexity || "",
+          id: selectedQuestion._id,
+          questionID:
+            selectedQuestion.questionID ?? selectedQuestion.questionId ?? "",
+          title: String(selectedQuestion.title ?? ""),
+          description: String(selectedQuestion.description ?? ""),
+          category: Array.isArray(selectedQuestion.category)
+            ? selectedQuestion.category.map((item) => String(item)).join(", ")
+            : String(selectedQuestion.category ?? ""),
+          complexity: String(selectedQuestion.complexity ?? ""),
           example: "",
           tags: [],
           popularityScore: 0,
-          createdDate: firstQuestion.createdAt
-            ? new Date(firstQuestion.createdAt).toLocaleDateString("en-US", {
+          createdDate: selectedQuestion.createdAt
+            ? new Date(selectedQuestion.createdAt).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "short",
                 day: "numeric",
               })
             : "",
-          lastModified: firstQuestion.updatedAt
-            ? new Date(firstQuestion.updatedAt).toLocaleDateString("en-US", {
+          lastModified: selectedQuestion.updatedAt
+            ? new Date(selectedQuestion.updatedAt).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "short",
                 day: "numeric",
@@ -92,20 +106,18 @@ function QuestionDetail() {
         setIsLoading(false);
       }
     };
-    
 
-    loadFirstQuestion();
+    loadQuestion();
   }, [id, editModeFromLink]);
-  
 
   const saveDisabled = useMemo(() => {
     return (
       !String(draft.questionID).trim() ||
       Number.isNaN(Number(draft.questionID)) ||
-      !draft.title.trim() ||
-      !draft.description.trim() ||
-      !draft.category.trim() ||
-      !draft.complexity.trim()
+      !String(draft.title ?? "").trim() ||
+      !String(draft.description ?? "").trim() ||
+      !String(draft.category ?? "").trim() ||
+      !String(draft.complexity ?? "").trim()
     );
   }, [draft]);
 
@@ -130,28 +142,30 @@ function QuestionDetail() {
     try {
       const updated = await updateQuestion(question.id, {
         questionID: Number(draft.questionID),
-        title: draft.title,
-        description: draft.description,
-        category: draft.category,
-        complexity: draft.complexity,
+        title: String(draft.title ?? ""),
+        description: String(draft.description ?? ""),
+        category: String(draft.category ?? ""),
+        complexity: String(draft.complexity ?? ""),
       });
 
       const nextQuestion = {
         ...question,
-        questionID: updated.questionID,
-        title: updated.title,
-        description: updated.description,
-        category: updated.category,
-        complexity: updated.complexity,
+        questionID:
+          updated.questionID ?? updated.questionId ?? draft.questionID,
+        title: String(updated.title ?? ""),
+        description: String(updated.description ?? ""),
+        category: Array.isArray(updated.category)
+          ? updated.category.map((item) => String(item)).join(", ")
+          : String(updated.category ?? ""),
+        complexity: String(updated.complexity ?? ""),
         tags: draft.tags.map((tag) => tag.trim()).filter(Boolean),
-        lastModified: new Date(updated.updatedAt || Date.now()).toLocaleDateString(
-          "en-US",
-          {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          }
-        ),
+        lastModified: new Date(
+          updated.updatedAt || Date.now(),
+        ).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
       };
 
       setQuestion(nextQuestion);
@@ -367,7 +381,9 @@ function QuestionDetail() {
           <div className="usage-grid">
             <div>
               <p className="field-label">Sessions Started</p>
-              <p className="value-strong">{model.sessionsStarted.toLocaleString()}</p>
+              <p className="value-strong">
+                {model.sessionsStarted.toLocaleString()}
+              </p>
             </div>
             <div>
               <p className="field-label">Success Rate</p>
@@ -388,9 +404,9 @@ function QuestionDetail() {
       <section className="block">
         <p className="section-label">Admin Privileges</p>
         <p className="body-text">
-          <strong>Admin Privileges:</strong> You have full access to edit question
-          content, modify metadata, and change question status. Deactivating a
-          question will hide it from users but preserve all data.
+          <strong>Admin Privileges:</strong> You have full access to edit
+          question content, modify metadata, and change question status.
+          Deactivating a question will hide it from users but preserve all data.
         </p>
       </section>
     </main>

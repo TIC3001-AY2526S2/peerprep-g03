@@ -92,3 +92,57 @@ export const createQuestion = async (req, res) => {
     res.status(500).json({ error: "Failed to create question" });
   }
 };
+
+// update question by Mongo _id
+export const updateQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { questionID, title, description, category, complexity } = req.body;
+
+    const nextQuestionId = questionID;
+    const titleText = String(title ?? "").trim();
+    const descriptionText = String(description ?? "").trim();
+    const complexityText = String(complexity ?? "").trim();
+    const categoryList = Array.isArray(category)
+      ? category.map((c) => String(c).trim()).filter(Boolean)
+      : [String(category ?? "").trim()].filter(Boolean);
+
+    if (
+      nextQuestionId === undefined ||
+      Number.isNaN(Number(nextQuestionId)) ||
+      !titleText ||
+      !descriptionText ||
+      categoryList.length === 0 ||
+      !complexityText
+    ) {
+      return res.status(400).json({
+        error: "questionID, title, description, category, and complexity are required",
+      });
+    }
+
+    const updatedQuestion = await Question.findByIdAndUpdate(
+      id,
+      {
+        questionId: Number(nextQuestionId),
+        title: titleText,
+        description: descriptionText,
+        category: categoryList,
+        complexity: complexityText,
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedQuestion) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+
+    return res.json(updatedQuestion);
+  } catch (error) {
+    console.error(error);
+    // 11000 is MongoDB’s duplicate key error code.
+    if (error.code === 11000) {
+      return res.status(409).json({ error: "Duplicate questionId" });
+    }
+    return res.status(500).json({ error: "Failed to update question" });
+  }
+};
