@@ -3,9 +3,14 @@ import axios from "axios";
 const API_BASE = "http://localhost:5000/api/questions";
 
 async function parseResponse(response) {
-  const data = await response.json().catch(() => ({}));
+  const data = await response
+    .json()
+    .catch(async () => ({
+      error: (await response.text().catch(() => "")) || "",
+    }));
+    
   if (!response.ok) {
-    throw new Error(data.error || "Request failed");
+    throw new Error(data.error || `Request failed (${response.status})`);
   }
   return data;
 }
