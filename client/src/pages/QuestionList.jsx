@@ -21,7 +21,7 @@ const QuestionList = () => {
   async function handleDelete(id) {
     try {
       await deleteQuestion(id);
-      alert("Question deleted");
+      alert("Question deleted successfully");
 
       setQuestions(prevQuestions =>
         prevQuestions.filter(q => q._id !== id)
@@ -29,6 +29,10 @@ const QuestionList = () => {
   
     } catch (err) {
       alert(err.message);
+
+      setQuestions(prevQuestions =>
+        prevQuestions.filter(q => q._id !== id)
+      );
     }
   }
 
