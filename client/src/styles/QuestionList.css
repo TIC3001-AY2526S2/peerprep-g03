@@ -80,3 +80,9 @@
   color: #1d4ed8;
   background: var(--primary-soft);
 }
+
+.field-error {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: red;
+}

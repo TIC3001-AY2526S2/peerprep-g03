@@ -4,13 +4,10 @@ import Question from "../models/Question.js";
 
 // simple validation helper
 const validateQuestionPayload = (body) => {
-  const { questionId, title, description, category, complexity } = body;
+  const { title, description, category, complexity } = body;
 
   if (!body || typeof body !== "object") return "Missing JSON body";
 
-  if (typeof questionId !== "number") {
-    return "questionId is required and must be a number";
-  }
   if (!title || typeof title !== "string" || title.trim().length < 3) {
     return "title is required (string, min 3 chars)";
   }
@@ -51,40 +48,32 @@ export const getAllQuestions = async (req, res) => {
 // create new question
 export const createQuestion = async (req, res) => {
   try {
-    // const questionsCollection = getQuestionsCollection();
-    // if (!questionsCollection) {
-    //   return res.status(503).json({ error: "Database not ready" });
-    // }
-
     const validationError = validateQuestionPayload(req.body);
     if (validationError) {
       return res.status(400).json({ error: validationError });
     }
 
-    const { questionId, title, description, category, complexity } = req.body;
+    const { title, description, category, complexity } = req.body;
 
     // Prevent duplicates based on same title - to be improved
     const existing = await Question.findOne({ 
-      $or: [
-        { questionId },
-        { title: title.trim() }
-      ]
+      title: title.trim()
     });
       
     if (existing) {
-      return res.status(409).json({ error: "A question with same questionId or title already exists" });
+      return res.status(409).json({ error: "A question with this title already exists" });
     }
 
     const categoryNormalised = [...new Set(category.map(c => c.trim()))];
-    const newQuestion = await Question.create({
-      questionId,
+    const newQuestion = new Question({
       title: title.trim(),
       description: description.trim(),
       category: categoryNormalised,
       complexity,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      // createdAt: new Date(),
+      // updatedAt: new Date(),
     });
+    const savedQuestion = await newQuestion.save();
 
     res.status(201).json(newQuestion);
   } catch (error) {
@@ -123,7 +112,7 @@ export const updateQuestion = async (req, res) => {
     const updatedQuestion = await Question.findByIdAndUpdate(
       id,
       {
-        questionId: Number(nextQuestionId),
+        questionID: Number(nextQuestionId),
         title: titleText,
         description: descriptionText,
         category: categoryList,
@@ -141,7 +130,7 @@ export const updateQuestion = async (req, res) => {
     console.error(error);
     // 11000 is MongoDB’s duplicate key error code.
     if (error.code === 11000) {
-      return res.status(409).json({ error: "Duplicate questionId" });
+      return res.status(409).json({ error: "Duplicate questionID" });
     }
     return res.status(500).json({ error: "Failed to update question" });
   }

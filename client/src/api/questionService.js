@@ -20,6 +20,18 @@ export async function getQuestions() {
   return parseResponse(response);
 }
 
+export async function createQuestion(payload){
+  const response = await fetch(API_BASE, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  
+  return parseResponse(response);
+}
+
 export async function updateQuestion(id, payload) {
   const response = await fetch(`${API_BASE}/${id}`, {
     method: "PUT",
