@@ -44,7 +44,7 @@ const QuestionList = () => {
   }, []);
 
   const getQuestionId = (question) =>
-    question.questionID ?? question.questionId ?? "";
+    question.questionID ?? question.questionID ?? "";
 
   const formatDateTime = (value) => {
     if (!value) return "-";

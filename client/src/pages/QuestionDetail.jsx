@@ -51,7 +51,7 @@ function QuestionDetail() {
 
         const selectedQuestion =
           questions.find((q) => String(q.questionID) === String(id)) ||
-          questions.find((q) => String(q.questionId) === String(id)) ||
+          questions.find((q) => String(q.questionID) === String(id)) ||
           questions.find((q) => String(q._id) === String(id));
 
         if (!selectedQuestion) {
@@ -64,7 +64,7 @@ function QuestionDetail() {
         const mappedQuestion = {
           id: selectedQuestion._id,
           questionID:
-            selectedQuestion.questionID ?? selectedQuestion.questionId ?? "",
+            selectedQuestion.questionID ?? selectedQuestion.questionID ?? "",
           title: String(selectedQuestion.title ?? ""),
           description: String(selectedQuestion.description ?? ""),
           category: Array.isArray(selectedQuestion.category)
@@ -151,7 +151,7 @@ function QuestionDetail() {
       const nextQuestion = {
         ...question,
         questionID:
-          updated.questionID ?? updated.questionId ?? draft.questionID,
+          updated.questionID ?? updated.questionID ?? draft.questionID,
         title: String(updated.title ?? ""),
         description: String(updated.description ?? ""),
         category: Array.isArray(updated.category)
