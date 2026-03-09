@@ -1,13 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { getAllQuestions, deleteQuestion } from "../api/questionService";
+import {
+  getAllQuestions,
+  deleteQuestion,
+  updateQuestion,
+} from "../api/questionService";
 import "../styles/QuestionList.css";
 import { Link } from "react-router-dom";
+
 const QuestionList = () => {
   const [questions, setQuestions] = useState([]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [editDraft, setEditDraft] = useState({
+    questionID: "",
+    title: "",
+    description: "",
+    category: "",
+    complexity: "",
+  });
+  const [statusMessage, setStatusMessage] = useState("");
+  const [statusType, setStatusType] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [questionStatus, setQuestionStatus] = useState("Active");
 
   useEffect(() => {
     fetchQuestions();
   }, []);
+
+  const getQuestionId = (question) =>
+    question.questionID ?? question.questionId ?? "";
+
+  const formatDateTime = (value) => {
+    if (!value) return "-";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "-";
+    return parsed.toLocaleDateString("en-SG", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+
+  const normalizeCategory = (category) => {
+    if (Array.isArray(category)) {
+      return category.join(", ");
+    }
+    return String(category ?? "");
+  };
 
   const fetchQuestions = async () => {
     try {
@@ -21,20 +63,82 @@ const QuestionList = () => {
   async function handleDelete(id) {
     try {
       await deleteQuestion(id);
-      alert("Question deleted successfully");
-
-      setQuestions(prevQuestions =>
-        prevQuestions.filter(q => q._id !== id)
-      );
-  
+      setQuestions((prevQuestions) => prevQuestions.filter((q) => q._id !== id));
+      setStatusType("success");
+      setStatusMessage("Question deleted successfully.");
     } catch (err) {
-      alert(err.message);
-
-      setQuestions(prevQuestions =>
-        prevQuestions.filter(q => q._id !== id)
-      );
+      setStatusType("error");
+      setStatusMessage(err.message || "Failed to delete question.");
     }
   }
+
+  const handleOpenEdit = (question) => {
+    setEditingQuestion(question);
+    setEditDraft({
+      questionID: String(getQuestionId(question)),
+      title: String(question.title ?? ""),
+      description: String(question.description ?? ""),
+      category: normalizeCategory(question.category),
+      complexity: String(question.complexity ?? ""),
+    });
+    setQuestionStatus(String(question.status ?? "Active"));
+    setStatusMessage("");
+    setStatusType("");
+    setIsSaving(false);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEdit = () => {
+    setIsEditModalOpen(false);
+    setEditingQuestion(null);
+    setIsSaving(false);
+  };
+
+  const handleDraftChange = (field, value) => {
+    setEditDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleToggleStatus = () => {
+    setQuestionStatus((prev) => (prev === "Active" ? "Inactive" : "Active"));
+  };
+
+  const isSaveDisabled =
+    isSaving ||
+    !editDraft.questionID.trim() ||
+    Number.isNaN(Number(editDraft.questionID)) ||
+    !editDraft.title.trim() ||
+    !editDraft.description.trim() ||
+    !editDraft.category.trim() ||
+    !editDraft.complexity.trim();
+
+  const handleSaveEdit = async () => {
+    if (!editingQuestion?._id) {
+      setStatusType("error");
+      setStatusMessage("Missing question id. Cannot update.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await updateQuestion(editingQuestion._id, {
+        questionID: Number(editDraft.questionID),
+        title: editDraft.title.trim(),
+        description: editDraft.description.trim(),
+        category: editDraft.category.trim(),
+        complexity: editDraft.complexity.trim(),
+      });
+
+      await fetchQuestions();
+      setStatusType("success");
+      setStatusMessage("Question updated successfully.");
+      handleCloseEdit();
+    } catch (error) {
+      setStatusType("error");
+      setStatusMessage(error.message || "Failed to update question.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="question-container">
@@ -42,6 +146,9 @@ const QuestionList = () => {
         <h1>Admin - Question List</h1>
         <p>Full administrative access to all questions</p>
       </div>
+      {statusMessage ? (
+        <div className={`status-message ${statusType}`}>{statusMessage}</div>
+      ) : null}
     <button className="btn btn-add">Add Question</button>
       <table className="question-table">
         <thead>
@@ -51,35 +158,27 @@ const QuestionList = () => {
             <th>Description</th>
             <th>Category</th>
             <th>Complexity</th>
-            <th colspan="3">Created</th>
+            <th colSpan="3">Created</th>
           </tr>
         </thead>
 
         <tbody>
           {questions.map((q) => (
-            <tr key={q.questionID}>
-                <td><Link to={`/admin/questions/:${q.questionID}`}>{q.questionID}</Link></td>
+            <tr key={q._id ?? getQuestionId(q)}>
+                <td><Link to={`/admin/questions/${getQuestionId(q)}`}>{getQuestionId(q)}</Link></td>
                 <td>{q.title}</td>
                 <td>
                     {q.description}
                 </td>
-                <td>{q.category}</td>
+                <td>{normalizeCategory(q.category)}</td>
                 <td>
-                    <span className={`Complexity ${q.complexity}`}>
+                    <span className={`complexity ${q.complexity}`}>
                     {q.complexity}
                     </span>
                 </td>
-                <td>{new Date(q.createdAt).toLocaleDateString('en-SG', { 
-                        year: 'numeric', 
-                        month: '2-digit', 
-                        day: '2-digit', 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        second: '2-digit' 
-                    })}
-                </td>
+                <td>{formatDateTime(q.createdAt)}</td>
                 <td>
-                    <Link to={`/admin/questions/${q.questionID}`} state={{ editMode: true }} className="btn btn-edit">Edit</Link>
+                    <button onClick={() => handleOpenEdit(q)} className="btn btn-edit">Edit</button>
                 </td>
                 <td>
                     <button onClick={() => handleDelete(q._id)} className="btn btn-delete">Delete</button>
@@ -88,6 +187,127 @@ const QuestionList = () => {
           ))}
         </tbody>
       </table>
+
+      {isEditModalOpen ? (
+        <div className="modal-backdrop" onClick={handleCloseEdit}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="edit-modal-header">
+              <h2>Question Details</h2>
+              <div className="modal-header-actions">
+                <button
+                  type="button"
+                  className="btn btn-status-toggle"
+                  onClick={handleToggleStatus}
+                >
+                  {questionStatus === "Active" ? "Deactivate" : "Activate"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-close"
+                  onClick={handleCloseEdit}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <p className="modal-section-title">Question Content</p>
+            <div className="edit-form-grid">
+              <label>
+                Question ID
+                <input
+                  className="modal-input"
+                  value={editDraft.questionID}
+                  readOnly
+                />
+              </label>
+
+              <label>
+                Title
+                <input
+                  className="modal-input"
+                  value={editDraft.title}
+                  onChange={(e) => handleDraftChange("title", e.target.value)}
+                />
+              </label>
+
+              <label>
+                Description
+                <textarea
+                  className="modal-input modal-textarea"
+                  rows={4}
+                  value={editDraft.description}
+                  onChange={(e) =>
+                    handleDraftChange("description", e.target.value)
+                  }
+                />
+              </label>
+
+              <label>
+                Category
+                <input
+                  className="modal-input"
+                  value={editDraft.category}
+                  onChange={(e) =>
+                    handleDraftChange("category", e.target.value)
+                  }
+                />
+              </label>
+
+              <label>
+                Complexity
+                <input
+                  className="modal-input"
+                  value={editDraft.complexity}
+                  onChange={(e) =>
+                    handleDraftChange("complexity", e.target.value)
+                  }
+                />
+              </label>
+            </div>
+
+            <p className="modal-section-title">Administrative Metadata</p>
+            <div className="details-grid">
+              <div>
+                <p className="detail-label">Status</p>
+                <p className="detail-value">{questionStatus}</p>
+              </div>
+              <div>
+                <p className="detail-label">Created Date</p>
+                <p className="detail-value">
+                  {formatDateTime(editingQuestion?.createdAt)}
+                </p>
+              </div>
+              <div>
+                <p className="detail-label">Last Modified</p>
+                <p className="detail-value">
+                  {formatDateTime(editingQuestion?.updatedAt)}
+                </p>
+              </div>
+              <div>
+                <p className="detail-label">Document ID</p>
+                <p className="detail-value detail-mono">
+                  {editingQuestion?._id ?? "-"}
+                </p>
+              </div>
+            </div>
+
+            <div className="edit-modal-actions">
+              <button
+                type="button"
+                className="btn btn-edit"
+                onClick={handleSaveEdit}
+                disabled={isSaveDisabled}
+              >
+                {isSaving ? "Saving..." : "Save"}
+              </button>
+              <button type="button" className="btn btn-delete" onClick={handleCloseEdit}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
