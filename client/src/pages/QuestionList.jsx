@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { 
-  getAllQuestions, 
   createQuestion,
+  getAllQuestions, 
   updateQuestion,
   deleteQuestion 
 } from "../api/questionService";
@@ -28,7 +28,7 @@ const QuestionList = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [editDraft, setEditDraft] = useState({
-    questionID: "",
+    questionID: "",   //consider to remove from edit?
     title: "",
     description: "",
     category: "",
@@ -109,6 +109,29 @@ const handleCategoryChange = (e) => {
   }));
 };
 
+const resetAddForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      category: [],
+      complexity: "",
+    });
+    setCategoryInput("");
+    setFieldErrors({ category: "" });
+    setMessage("");
+    setErrorMessage("");
+  };
+
+const handleOpenAdd = () => {
+  resetAddForm();
+  setShowAddForm(true);
+};
+
+const handleCloseAdd = () => {
+  setShowAddForm(false);
+  resetAddForm();
+};
+
 const handleCreateQuestion = async (e) => {
   e.preventDefault();
 
@@ -137,19 +160,10 @@ const handleCreateQuestion = async (e) => {
     const result = await createQuestion(payload);
     console.log("Create question success:", result);
 
-    setMessage("Question created successfully.");
+    setStatusType("success");
+    setStatusMessage("Question created successfully.");
 
-    setFormData({
-      title: "",
-      description: "",
-      category: [],
-      complexity: "",
-    });
-
-    setCategoryInput("");
-    setFieldErrors({ category: "" });
-    setShowAddForm(false);
-
+    handleCloseAdd();
     await fetchQuestions();
   } catch (error) {
     console.error("Error creating question:", error);
@@ -242,167 +256,109 @@ const handleCreateQuestion = async (e) => {
       <div className="page-header">
         <h1>Admin - Question List</h1>
         <p>Full administrative access to all questions</p>
-      </div>
-      {statusMessage ? (
-        <div className={`status-message ${statusType}`}>{statusMessage}</div>
-      ) : null}
-      <button 
-        className="btn btn-add"
-        onClick={() => setShowAddForm(true)}
-      >
-        Add Question
-      </button>
+    </div>
 
-      {message && <p className="success-message">{message}</p>}
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
+    {statusMessage ? (
+      <div className={`status-message ${statusType}`}>{statusMessage}</div>
+    ) : null}
 
-      {showAddForm && (
-        <div className="add-question-form">
-          <h2>Add New Question</h2>
-          <form onSubmit={handleCreateQuestion}>
-            <div className="form-group">
-              <label>Title</label>
-              <input
-                type="text"
-                name="title"j
-                value={formData.title}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
+    <button 
+      className="btn btn-add"
+      onClick={handleOpenAdd}
+    >
+      Add Question
+    </button>
 
-            <div className="form-group">
-              <label>Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Category</label>
-              <input
-                type="text"
-                name="category"
-                value={categoryInput}
-                onChange={handleCategoryChange}
-                placeholder={"Enter categories separated by comma"}
-                required
-              />
-              {fieldErrors.category && (
-                <p className="field-error">{fieldErrors.category}</p>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label>Complexity</label>
-              <select
-                name="complexity"
-                value={formData.complexity}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">Select complexity</option>
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
-              </select>
-            </div>
-
-            <button type="submit" className="btn btn-add">
-              Submit
-            </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => setShowAddForm(false)}
-            >
-              Cancel
-            </button>
-          </form>
-        </div>
-      )}
+    {message && <p className="success-message">{message}</p>}
+    {errorMessage && <p className="error-message">{errorMessage}</p>}
 
     <table className="question-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Category</th>
-            <th>Complexity</th>
-            <th colSpan="3">Created</th>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Complexity</th>
+          <th colSpan="3">Created</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {questions.map((q) => (
+          <tr key={q._id ?? getQuestionId(q)}>
+              <td>
+                <Link to={`/admin/questions/${getQuestionId(q)}`}>
+                {getQuestionId(q)}
+                </Link>
+              </td>
+              <td>
+                {q.title}
+              </td>
+              <td>
+                  {q.description}
+              </td>
+              <td>
+                {normalizeCategory(q.category)}
+              </td>
+              <td>
+                <span className={`complexity ${q.complexity}`}>
+                {q.complexity}
+                </span>
+              </td>
+              <td>
+                {formatDateTime(q.createdAt)}
+              </td>
+              <td>
+                  <button 
+                    onClick={() => handleOpenEdit(q)} 
+                    className="btn btn-edit"
+                  >
+                    Edit
+                  </button>
+              </td>
+              <td>
+                  <button 
+                    onClick={() => handleDelete(q._id)}
+                    className="btn btn-delete"
+                  >
+                    Delete
+                  </button>
+              </td>
           </tr>
-        </thead>
+        ))}
+      </tbody>
+    </table>
 
-        <tbody>
-          {questions.map((q) => (
-            <tr key={q._id ?? getQuestionId(q)}>
-                <td><Link to={`/admin/questions/${getQuestionId(q)}`}>{getQuestionId(q)}</Link></td>
-                <td>{q.title}</td>
-                <td>
-                    {q.description}
-                </td>
-                <td>{normalizeCategory(q.category)}</td>
-                <td>
-                    <span className={`complexity ${q.complexity}`}>
-                    {q.complexity}
-                    </span>
-                </td>
-                <td>{formatDateTime(q.createdAt)}</td>
-                <td>
-                    <button onClick={() => handleOpenEdit(q)} className="btn btn-edit">Edit</button>
-                </td>
-                <td>
-                    <button onClick={() => handleDelete(q._id)} className="btn btn-delete">Delete</button>
-                </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {isEditModalOpen ? (
-        <div className="modal-backdrop" onClick={handleCloseEdit}>
-          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="edit-modal-header">
-              <h2>Question Details</h2>
-              <div className="modal-header-actions">
-                <button
-                  type="button"
-                  className="btn btn-status-toggle"
-                  onClick={handleToggleStatus}
-                >
-                  {questionStatus === "Active" ? "Deactivate" : "Activate"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-close"
-                  onClick={handleCloseEdit}
-                >
-                  Close
-                </button>
-              </div>
+    {showAddForm ? (
+      <div className="modal-backdrop" onClick={handleCloseAdd}>
+        <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="edit-modal-header">
+            <h2>Add New Question</h2>
+            <div className="modal-header-actions">
+              <button
+                type="button"
+                className="btn btn-close"
+                onClick={handleCloseAdd}
+              >
+                Close
+              </button>
             </div>
+          </div>
 
-            <p className="modal-section-title">Question Content</p>
+          <p className="modal-section-title">Question Content</p>
+
+          <form onSubmit={handleCreateQuestion}>
             <div className="edit-form-grid">
-              <label>
-                Question ID
-                <input
-                  className="modal-input"
-                  value={editDraft.questionID}
-                  readOnly
-                />
-              </label>
-
               <label>
                 Title
                 <input
                   className="modal-input"
-                  value={editDraft.title}
-                  onChange={(e) => handleDraftChange("title", e.target.value)}
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  required
                 />
               </label>
 
@@ -410,11 +366,11 @@ const handleCreateQuestion = async (e) => {
                 Description
                 <textarea
                   className="modal-input modal-textarea"
+                  name="description"
                   rows={4}
-                  value={editDraft.description}
-                  onChange={(e) =>
-                    handleDraftChange("description", e.target.value)
-                  }
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  required
                 />
               </label>
 
@@ -422,67 +378,172 @@ const handleCreateQuestion = async (e) => {
                 Category
                 <input
                   className="modal-input"
-                  value={editDraft.category}
-                  onChange={(e) =>
-                    handleDraftChange("category", e.target.value)
-                  }
+                  type="text"
+                  name="category"
+                  value={categoryInput}
+                  onChange={handleCategoryChange}
+                  placeholder="Enter categories separated by comma"
+                  required
                 />
+                {fieldErrors.category ? (
+                  <p className="field-error">{fieldErrors.category}</p>
+                ) : null}
               </label>
 
               <label>
                 Complexity
-                <input
+                <select
                   className="modal-input"
-                  value={editDraft.complexity}
-                  onChange={(e) =>
-                    handleDraftChange("complexity", e.target.value)
-                  }
-                />
+                  name="complexity"
+                  value={formData.complexity}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Select complexity</option>
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
               </label>
             </div>
 
-            <p className="modal-section-title">Administrative Metadata</p>
-            <div className="details-grid">
-              <div>
-                <p className="detail-label">Status</p>
-                <p className="detail-value">{questionStatus}</p>
-              </div>
-              <div>
-                <p className="detail-label">Created Date</p>
-                <p className="detail-value">
-                  {formatDateTime(editingQuestion?.createdAt)}
-                </p>
-              </div>
-              <div>
-                <p className="detail-label">Last Modified</p>
-                <p className="detail-value">
-                  {formatDateTime(editingQuestion?.updatedAt)}
-                </p>
-              </div>
-              <div>
-                <p className="detail-label">Document ID</p>
-                <p className="detail-value detail-mono">
-                  {editingQuestion?._id ?? "-"}
-                </p>
-              </div>
-            </div>
-
             <div className="edit-modal-actions">
+              <button type="submit" className="btn btn-add">
+                Submit
+              </button>
               <button
                 type="button"
-                className="btn btn-edit"
-                onClick={handleSaveEdit}
-                disabled={isSaveDisabled}
+                className="btn btn-delete"
+                onClick={handleCloseAdd}
               >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
-              <button type="button" className="btn btn-delete" onClick={handleCloseEdit}>
                 Cancel
               </button>
             </div>
+          </form>
+        </div>
+      </div>
+    ) : null}
+
+    {isEditModalOpen ? (
+      <div className="modal-backdrop" onClick={handleCloseEdit}>
+        <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="edit-modal-header">
+            <h2>Question Details</h2>
+            <div className="modal-header-actions">
+              <button
+                type="button"
+                className="btn btn-status-toggle"
+                onClick={handleToggleStatus}
+              >
+                {questionStatus === "Active" ? "Deactivate" : "Activate"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-close"
+                onClick={handleCloseEdit}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+
+          <p className="modal-section-title">Question Content</p>
+          <div className="edit-form-grid">
+            <label>
+              Question ID
+              <input
+                className="modal-input"
+                value={editDraft.questionID}
+                readOnly
+              />
+            </label>
+
+            <label>
+              Title
+              <input
+                className="modal-input"
+                value={editDraft.title}
+                onChange={(e) => handleDraftChange("title", e.target.value)}
+              />
+            </label>
+
+            <label>
+              Description
+              <textarea
+                className="modal-input modal-textarea"
+                rows={4}
+                value={editDraft.description}
+                onChange={(e) =>
+                  handleDraftChange("description", e.target.value)
+                }
+              />
+            </label>
+
+            <label>
+              Category
+              <input
+                className="modal-input"
+                value={editDraft.category}
+                onChange={(e) =>
+                  handleDraftChange("category", e.target.value)
+                }
+              />
+            </label>
+
+            <label>
+              Complexity
+              <input
+                className="modal-input"
+                value={editDraft.complexity}
+                onChange={(e) =>
+                  handleDraftChange("complexity", e.target.value)
+                }
+              />
+            </label>
+          </div>
+
+          <p className="modal-section-title">Administrative Metadata</p>
+          <div className="details-grid">
+            <div>
+              <p className="detail-label">Status</p>
+              <p className="detail-value">{questionStatus}</p>
+            </div>
+            <div>
+              <p className="detail-label">Created Date</p>
+              <p className="detail-value">
+                {formatDateTime(editingQuestion?.createdAt)}
+              </p>
+            </div>
+            <div>
+              <p className="detail-label">Last Modified</p>
+              <p className="detail-value">
+                {formatDateTime(editingQuestion?.updatedAt)}
+              </p>
+            </div>
+            <div>
+              <p className="detail-label">Document ID</p>
+              <p className="detail-value detail-mono">
+                {editingQuestion?._id ?? "-"}
+              </p>
+            </div>
+          </div>
+
+          <div className="edit-modal-actions">
+            <button
+              type="button"
+              className="btn btn-edit"
+              onClick={handleSaveEdit}
+              disabled={isSaveDisabled}
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </button>
+            <button type="button" className="btn btn-delete" onClick={handleCloseEdit}>
+              Cancel
+            </button>
           </div>
         </div>
-      ) : null}
+      </div>
+    ) : null}
     </div>
   );
 };
