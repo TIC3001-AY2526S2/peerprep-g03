@@ -277,7 +277,6 @@ const handleCreateQuestion = async (e) => {
         <tr>
           <th>ID</th>
           <th>Title</th>
-          <th>Description</th>
           <th>Category</th>
           <th>Complexity</th>
           <th colSpan="3">Created</th>
