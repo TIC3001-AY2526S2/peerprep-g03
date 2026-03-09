@@ -346,7 +346,7 @@ function QuestionDetail() {
           )}
         </article>
 
-        <article className="panel">
+        <article style={{ display: "none" }} className="panel">
           <p className="section-label">Administrative Metadata</p>
           <div className="stats-grid">
             <div>
@@ -376,7 +376,7 @@ function QuestionDetail() {
           </div>
         </article>
 
-        <article className="panel">
+        <article style={{ display: "none" }} className="panel">
           <p className="section-label">Usage Statistics</p>
           <div className="usage-grid">
             <div>
@@ -401,7 +401,7 @@ function QuestionDetail() {
         </article>
       </section>
 
-      <section className="block">
+      <section style={{ display: "none" }} className="block">
         <p className="section-label">Admin Privileges</p>
         <p className="body-text">
           <strong>Admin Privileges:</strong> You have full access to edit
