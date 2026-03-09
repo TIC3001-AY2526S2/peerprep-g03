@@ -340,11 +340,8 @@ const handleCreateQuestion = async (e) => {
         <tbody>
           {questions.map((q) => (
             <tr key={q._id ?? getQuestionId(q)}>
-                <td><Link to={`/admin/questions/${getQuestionId(q)}`}>{getQuestionId(q)}</Link></td>
-                <td>{q.title}</td>
-                <td>
-                    {q.description}
-                </td>
+                <td>{q.questionID}</td>
+                <td><Link to={`/admin/questions/${getQuestionId(q)}`}>{q.title}</Link></td>
                 <td>{normalizeCategory(q.category)}</td>
                 <td>
                     <span className={`complexity ${q.complexity}`}>
@@ -369,7 +366,7 @@ const handleCreateQuestion = async (e) => {
             <div className="edit-modal-header">
               <h2>Question Details</h2>
               <div className="modal-header-actions">
-                <button
+                <button style={{ display: "none" }}
                   type="button"
                   className="btn btn-status-toggle"
                   onClick={handleToggleStatus}

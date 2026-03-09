@@ -229,11 +229,11 @@ function QuestionDetail() {
               </button>
             </>
           ) : (
-            <button type="button" className="btn" onClick={onStartEdit}>
+            <button style={{ display: "none" }} type="button" className="btn" onClick={onStartEdit}>
               Edit
             </button>
           )}
-          <button type="button" className="btn" onClick={onToggleStatus}>
+          <button style={{ display: "none" }} type="button" className="btn" onClick={onToggleStatus}>
             {question.status === "Active" ? "Deactivate" : "Activate"}
           </button>
         </div>
