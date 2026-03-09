@@ -63,20 +63,82 @@ const QuestionList = () => {
   async function handleDelete(id) {
     try {
       await deleteQuestion(id);
-      alert("Question deleted successfully");
-
-      setQuestions(prevQuestions =>
-        prevQuestions.filter(q => q._id !== id)
-      );
-  
+      setQuestions((prevQuestions) => prevQuestions.filter((q) => q._id !== id));
+      setStatusType("success");
+      setStatusMessage("Question deleted successfully.");
     } catch (err) {
-      alert(err.message);
-
-      setQuestions(prevQuestions =>
-        prevQuestions.filter(q => q._id !== id)
-      );
+      setStatusType("error");
+      setStatusMessage(err.message || "Failed to delete question.");
     }
   }
+
+  const handleOpenEdit = (question) => {
+    setEditingQuestion(question);
+    setEditDraft({
+      questionID: String(getQuestionId(question)),
+      title: String(question.title ?? ""),
+      description: String(question.description ?? ""),
+      category: normalizeCategory(question.category),
+      complexity: String(question.complexity ?? ""),
+    });
+    setQuestionStatus(String(question.status ?? "Active"));
+    setStatusMessage("");
+    setStatusType("");
+    setIsSaving(false);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEdit = () => {
+    setIsEditModalOpen(false);
+    setEditingQuestion(null);
+    setIsSaving(false);
+  };
+
+  const handleDraftChange = (field, value) => {
+    setEditDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleToggleStatus = () => {
+    setQuestionStatus((prev) => (prev === "Active" ? "Inactive" : "Active"));
+  };
+
+  const isSaveDisabled =
+    isSaving ||
+    !editDraft.questionID.trim() ||
+    Number.isNaN(Number(editDraft.questionID)) ||
+    !editDraft.title.trim() ||
+    !editDraft.description.trim() ||
+    !editDraft.category.trim() ||
+    !editDraft.complexity.trim();
+
+  const handleSaveEdit = async () => {
+    if (!editingQuestion?._id) {
+      setStatusType("error");
+      setStatusMessage("Missing question id. Cannot update.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await updateQuestion(editingQuestion._id, {
+        questionID: Number(editDraft.questionID),
+        title: editDraft.title.trim(),
+        description: editDraft.description.trim(),
+        category: editDraft.category.trim(),
+        complexity: editDraft.complexity.trim(),
+      });
+
+      await fetchQuestions();
+      setStatusType("success");
+      setStatusMessage("Question updated successfully.");
+      handleCloseEdit();
+    } catch (error) {
+      setStatusType("error");
+      setStatusMessage(error.message || "Failed to update question.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="question-container">
