@@ -135,3 +135,25 @@ export const updateQuestion = async (req, res) => {
     return res.status(500).json({ error: "Failed to update question" });
   }
 };
+
+//delete question
+export const deleteQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedQuestion = await Question.findByIdAndDelete(id);
+
+    if (!deletedQuestion) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+
+    res.json({
+      message: "Question deleted successfully",
+      deletedQuestion,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete question" });
+  }
+};
