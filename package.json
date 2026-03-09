@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "server:start": "npm --prefix server start",
+    "server:dev": "npm --prefix server run dev",
+
+    "client:start": "npm --prefix client start",
+
+    "start": "npm run server:start",
+    "dev": "npm --prefix server run dev"
+  }
+}
