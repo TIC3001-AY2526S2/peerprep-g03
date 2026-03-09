@@ -35,11 +35,7 @@ export async function updateQuestion(id, payload) {
 export async function deleteQuestion(id) {
   const response = await fetch(`${API_BASE}/${id}`, {
     method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
   });
-
   return parseResponse(response);
 }
 

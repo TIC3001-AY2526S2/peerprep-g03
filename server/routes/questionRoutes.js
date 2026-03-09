@@ -6,6 +6,7 @@ const router = express.Router();
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 router.get("/", async (req, res) => {
+  console.log("GET /api/questions called");
   try {
     const questions = await Question.find().sort({ createdAt: -1 });
     res.json(questions);
@@ -82,9 +83,13 @@ router.put("/:id", async (req, res) => {
 
 // API to delete question id
 router.delete("/:id", async (req, res) => {
+  console.log("delete /api/questions called");
   try {
-    await Question.findByIdAndDelete(req.params.id);
-    res.json({ message: "Question deleted" });
+    const deleted = await Question.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+    res.json({ message: "Question deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete question" });
   }

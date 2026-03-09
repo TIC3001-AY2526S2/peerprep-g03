@@ -18,10 +18,19 @@ const QuestionList = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    await deleteQuestion(id);
-    fetchQuestions();
-  };
+  async function handleDelete(id) {
+    try {
+      await deleteQuestion(id);
+      alert("Question deleted");
+
+      setQuestions(prevQuestions =>
+        prevQuestions.filter(q => q._id !== id)
+      );
+  
+    } catch (err) {
+      alert(err.message);
+    }
+  }
 
   return (
     <div className="question-container">
@@ -69,7 +78,7 @@ const QuestionList = () => {
                     <Link to={`/admin/questions/${q.questionID}`} state={{ editMode: true }} className="btn btn-edit">Edit</Link>
                 </td>
                 <td>
-                    <button onClick={() => handleDelete(q.questionID)} className="btn btn-delete">Delete</button>
+                    <button onClick={() => handleDelete(q._id)} className="btn btn-delete">Delete</button>
                 </td>
             </tr>
           ))}
