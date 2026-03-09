@@ -7,16 +7,13 @@ const syncQuestionIdCounter = async () => {
 
   const existingCounter = await Counter.findOne({ name: "questionID" });
 
-  console.log("SYNC highest questionID:", maxQuestionId);
-  console.log("SYNC existing counter:", existingCounter ? existingCounter.seq : null);
-
   if (!existingCounter || existingCounter.seq < maxQuestionId) {
     const updatedCounter = await Counter.findOneAndUpdate(
       { name: "questionID" },
       { $set: { seq: maxQuestionId } },
       { upsert: true, returnDocument: "after" }
     );
-    console.log("SYNC updated counter to:", updatedCounter.seq);
+    // console.log("SYNC updated counter to:", updatedCounter.seq);
   } else {
     console.log("SYNC counter already valid");
   }
