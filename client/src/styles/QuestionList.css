@@ -17,6 +17,20 @@
   color: #666;
 }
 
+.btn-logout {
+  padding: 6px 12px;
+  font-size: 12px;
+  background-color: #888;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-logout:hover {
+  background-color: #666;
+}
+
 .question-table {
   width: 100%;
   border-collapse: collapse;

@@ -6,9 +6,9 @@ import {
   deleteQuestion 
 } from "../api/questionService";
 import "../styles/QuestionList.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const QuestionList = () => {
+const QuestionList = ({ setAuth }) => {
   const [questions, setQuestions] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [message, setMessage] = useState("");
@@ -38,10 +38,17 @@ const QuestionList = () => {
   const [statusType, setStatusType] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [questionStatus, setQuestionStatus] = useState("Active");
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchQuestions();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setAuth(false);
+    navigate("/login");
+  };
 
   const getQuestionId = (question) =>
     question.questionID ?? question.questionID ?? "";
@@ -253,10 +260,17 @@ const handleCreateQuestion = async (e) => {
 
   return (
     <div className="question-container">
-      <div className="page-header">
-        <h1>Admin - Question List</h1>
-        <p>Full administrative access to all questions</p>
-    </div>
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1>Admin - Question List</h1>
+          <p>Full administrative access to all questions</p>
+        </div>
+        
+        <div>
+          <button className="btn-logout" onClick={handleLogout}> Logout </button>
+        </div>
+      </div>
+      
 
     {statusMessage ? (
       <div className={`status-message ${statusType}`}>{statusMessage}</div>

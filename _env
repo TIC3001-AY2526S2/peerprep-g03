@@ -1,0 +1,11 @@
+# DB_CLOUD_URI=mongodb+srv://mongoUserAdmin:Password234@userservice.zksviqz.mongodb.net/userservice?appName=UserService
+
+DB_CLOUD_URI=mongodb://mongoUserAdmin:Password234@ac-y5caj5m-shard-00-00.zksviqz.mongodb.net:27017,ac-y5caj5m-shard-00-01.zksviqz.mongodb.net:27017,ac-y5caj5m-shard-00-02.zksviqz.mongodb.net:27017/?ssl=true&replicaSet=atlas-adt75j-shard-0&authSource=admin&appName=UserService
+DB_LOCAL_URI=mongodb://127.0.0.1:27017/peerprepUserServiceDB
+PORT=3001
+
+# Will use cloud MongoDB Atlas database
+ENV=PROD
+
+# Secret for creating JWT signature
+JWT_SECRET=you-can-replace-this-with-your-own-secret

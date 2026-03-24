@@ -1,17 +1,29 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import QuestionDetail from "./pages/QuestionDetail";
 import QuestionList from "./pages/QuestionList";
+
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    setIsAuthenticated(!!localStorage.getItem("token"));
+  }, []);
+  // const isAuthenticated = !!localStorage.getItem("token");
   return (
-      <Router>
-        <Routes>
-          {/* DEFAULT PAGE */}
-          <Route path="/" element={<Navigate to="/admin/questions" />} />
-          <Route path="/admin/questions" element={<QuestionList />} />
-          <Route path="/admin/questions/:id" element={<QuestionDetail />} />
-        </Routes>
+    <Router>
+      <Routes>
+        <Route path="/" element={ isAuthenticated ? ( <Navigate to="/admin/questions" /> ) : ( <Navigate to="/login" /> ) } />
+        <Route path="/login" element={<Login setAuth={setIsAuthenticated}/>} />
+        <Route path="/register" element={<Register />} />
+
+        <Route path="/admin/questions" element={ isAuthenticated ? ( <QuestionList setAuth={setIsAuthenticated} /> ) : ( <Navigate to="/login" /> ) } />
+        <Route path="/admin/questions/:id" element={ isAuthenticated ? ( <QuestionDetail /> ) : ( <Navigate to="/login" /> ) } />
+      </Routes>
     </Router>
+
   )
 }
 
