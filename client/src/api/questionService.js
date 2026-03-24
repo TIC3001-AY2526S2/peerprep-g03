@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:5000/api/questions";
+const API_BASE = "http://localhost:5050/api/questions";
 
 async function parseResponse(response) {
   const data = await response

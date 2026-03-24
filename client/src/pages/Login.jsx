@@ -13,8 +13,10 @@ export default function Login({ setAuth }) {
       e.preventDefault();
       setError("");
       try {
-        const data = await loginUser({ email, password });
-        localStorage.setItem("token", data.token || data.accessToken);
+        const res = await loginUser({ email, password });
+        const user = res.data;
+        localStorage.setItem("token", user.accessToken);
+        localStorage.setItem("isAdmin", user.isAdmin.toString());
         setAuth(true);
         navigate("/admin/questions");
       } catch (err) {
