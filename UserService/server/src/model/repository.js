@@ -11,10 +11,8 @@ export async function connectToDB() {
   if (!mongoDBUri) {
     throw new Error("MongoDB URI is missing from environmental variables.");
   }
-  console.log("Mongo URI:", mongoDBUri);
   try {
     await connect(mongoDBUri);
-    console.log("connected to mongoDB:", mongoDBUri);
   } catch (err) {
     console.log("Failed to connect to MongoDB");
     throw err;
@@ -64,12 +62,12 @@ export async function updateUserById(userId, username, email, password) {
   );
 }
 
-export async function updateUserPrivilegeById(userId, isAdmin) {
+export async function updateUserPrivilegeById(userId, role) {
   return UserModel.findByIdAndUpdate(
     userId,
     {
       $set: {
-        isAdmin,
+        role,
       },
     },
     { new: true },  // return the updated user

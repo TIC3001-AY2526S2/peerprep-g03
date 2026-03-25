@@ -21,10 +21,10 @@ const UserModelSchema = new Schema({
     type: Date,
     default: Date.now, // Setting default to the current date/time
   },
-  isAdmin: {
-    type: Boolean,
+  role: {
+    type: String,
     required: true,
-    default: false,
+    default: "user",
   },
 });
 

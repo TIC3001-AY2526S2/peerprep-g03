@@ -111,9 +111,9 @@ export async function updateUser(req, res) {
 
 export async function updateUserPrivilege(req, res) {
   try {
-    const { isAdmin } = req.body;
+    const { role } = req.body;
 
-    if (isAdmin !== undefined) {  // isAdmin can have boolean value true or false
+    if (role !== undefined) {
       const userId = req.params.id;
       if (!isValidObjectId(userId)) {
         return res.status(404).json({ message: `User ${userId} not found` });
@@ -123,13 +123,13 @@ export async function updateUserPrivilege(req, res) {
         return res.status(404).json({ message: `User ${userId} not found` });
       }
 
-      const updatedUser = await _updateUserPrivilegeById(userId, isAdmin === true);
+      const updatedUser = await _updateUserPrivilegeById(userId, role === "admin");
       return res.status(200).json({
         message: `Updated privilege for user ${userId}`,
         data: formatUserResponse(updatedUser),
       });
     } else {
-      return res.status(400).json({ message: "isAdmin is missing!" });
+      return res.status(400).json({ message: "role is missing!" });
     }
   } catch (err) {
     console.error(err);
@@ -161,7 +161,7 @@ export function formatUserResponse(user) {
     id: user.id,
     username: user.username,
     email: user.email,
-    isAdmin: user.isAdmin,
+    role: user.role,
     createdAt: user.createdAt,
   };
 }
