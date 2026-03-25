@@ -6,9 +6,9 @@ import {
   deleteQuestion 
 } from "../api/questionService";
 import "../styles/QuestionList.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const QuestionList = () => {
+const QuestionList = ({ setAuth }) => {
   const [questions, setQuestions] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [message, setMessage] = useState("");
@@ -38,10 +38,18 @@ const QuestionList = () => {
   const [statusType, setStatusType] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [questionStatus, setQuestionStatus] = useState("Active");
+  const navigate = useNavigate();
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
 
   useEffect(() => {
     fetchQuestions();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setAuth(false);
+    navigate("/login");
+  };
 
   const getQuestionId = (question) =>
     question.questionID ?? question.questionID ?? "";
@@ -254,21 +262,35 @@ const handleCreateQuestion = async (e) => {
   return (
     <div className="question-container">
       <div className="page-header">
-        <h1>Admin - Question List</h1>
-        <p>Full administrative access to all questions</p>
-    </div>
+        <div>
+          <h1>
+            {isAdmin ? "Admin - Question List" : "Question List"}
+          </h1>
+          <p>
+            {isAdmin
+              ? "Full administrative access to all questions"
+              : "View all questions"}
+          </p>
+        </div>
+
+        <div className="header-actions">
+          {isAdmin && (
+            <button className="btn btn-secondary" onClick={() => navigate("/admin/users")} >
+              User Registry
+            </button>
+          )}
+          <button className="btn btn-logout" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </div>
 
     {statusMessage ? (
       <div className={`status-message ${statusType}`}>{statusMessage}</div>
     ) : null}
 
-    <button 
-      className="btn btn-add"
-      onClick={handleOpenAdd}
-    >
-      Add Question
-    </button>
-
+    {isAdmin && ( <button className="btn btn-add" onClick={handleOpenAdd} > Add Question </button>  )}
+    
     {message && <p className="success-message">{message}</p>}
     {errorMessage && <p className="error-message">{errorMessage}</p>}
 

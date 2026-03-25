@@ -1,0 +1,19 @@
+services:
+  question-service:
+    build: ./questionService/server
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./questionService/server/.env
+
+  client:
+    build: ./client
+    ports:
+      - "3000:3000"
+
+  user-service:
+    build: ./userService/server
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./userService/server/.env
