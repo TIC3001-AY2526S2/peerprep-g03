@@ -1,11 +1,19 @@
 {
   "name": "peerprep-g03",
-  "private": true,
+  "private": true, 
+  "workspaces": [
+    "packages/*",
+    "questionService",
+    "UserService",
+    "client"
+  ],
   "scripts": {
     "client:dev": "npm --prefix client start",
     "question:dev": "npm --prefix questionService/server run dev",
+    "user:dev": "npm --prefix UserService/server run dev",
     "client:start": "npm --prefix client start",
     "question:start": "npm --prefix questionService/server start",
+    "user:start": "npm --prefix UserService/server start",
     "dev": "concurrently \"npm run client:dev\" \"npm run question:dev\"",
     "start": "concurrently \"npm run question:start\""
   },
