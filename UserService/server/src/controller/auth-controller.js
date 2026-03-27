@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { findUserByEmail as _findUserByEmail } from "../model/repository.js";
 import { formatUserResponse } from "./user-controller.js";
+import { signAccessToken } from "@peerprep/auth";
 
 export async function handleLogin(req, res) {
   const { email, password } = req.body;
@@ -9,20 +9,26 @@ export async function handleLogin(req, res) {
     try {
       const user = await _findUserByEmail(email);
       if (!user) {
-        return res.status(401).json({ message: "Wrong email and/or password" });
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const match = await bcrypt.compare(password, user.password);
-      if (!match) {
-        return res.status(401).json({ message: "Wrong email and/or password" });
+      const isAuthenticated = await bcrypt.compare(password, user.password);
+      if (!isAuthenticated) {
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const accessToken = jwt.sign({
-        sub: user.id,
-      }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
-      return res.status(200).json({ message: "User logged in", data: { accessToken, ...formatUserResponse(user) } });
+      const accessToken = signAccessToken(user, { expiresIn: "1d" });
+
+      return res.status(200).json(
+        { 
+          message: "User logged in", 
+          data: 
+            { 
+              accessToken,
+              ...formatUserResponse(user)
+            }
+        }
+      );
     } catch (err) {
       return res.status(500).json({ message: err.message });
     }

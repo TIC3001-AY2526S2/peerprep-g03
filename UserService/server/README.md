@@ -113,7 +113,7 @@
     | 401 (Unauthorized)          | Incorrect email or password                        |
     | 500 (Internal Server Error) | Database or server error                           |
 
-### Verify Token
+### Verify Token - to be used as a lightweight "who am I" endpoint -- help FE (client) initialise auth state
 
 - This endpoint allows one to verify a JWT access token to authenticate and retrieve the user's data associated with the token.
 - HTTP Method: `GET`
@@ -145,17 +145,17 @@
 
 - HTTP Method: `PATCH`
 
-- Endpoint: <http://localhost:3001/users/{userId}>
+- Endpoint: <http://localhost:3001/users/{userId}/privilege>
 
 - Parameters
   - Required: `userId` path parameter
 
 - Body
-  - Required: `isAdmin` (boolean)
+  - Required: `role` (string)
 
     ```json
     {
-      "isAdmin": true
+      "role": "admin"
     }
     ```
 

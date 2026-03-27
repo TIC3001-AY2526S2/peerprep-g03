@@ -1,4 +1,5 @@
 import express from "express";
+import { requireOwnerOrAdmin } from "../middleware/basic-access-control.js";
 
 import {
   createUser,
@@ -8,20 +9,25 @@ import {
   updateUser,
   updateUserPrivilege,
 } from "../controller/user-controller.js";
-import { verifyAccessToken, verifyIsAdmin, verifyIsOwnerOrAdmin } from "../middleware/basic-access-control.js";
+
+import {
+  ROLES,
+  requireRole,
+  authenticateToken
+} from "@peerprep/auth"
 
 const router = express.Router();
 
-router.get("/", verifyAccessToken, verifyIsAdmin, getAllUsers);
+router.get("/", authenticateToken, requireRole(ROLES.ADMIN), getAllUsers);
 
-router.patch("/:id/privilege", verifyAccessToken, verifyIsAdmin, updateUserPrivilege);
+router.patch("/:id/privilege", authenticateToken, requireRole(ROLES.ADMIN), updateUserPrivilege);
 
 router.post("/", createUser);
 
-router.get("/:id", verifyAccessToken, verifyIsOwnerOrAdmin, getUser);
+router.get("/:id", authenticateToken, requireOwnerOrAdmin, getUser);
 
-router.patch("/:id", verifyAccessToken, verifyIsOwnerOrAdmin, updateUser);
+router.patch("/:id", authenticateToken, requireOwnerOrAdmin, updateUser);
 
-router.delete("/:id", verifyAccessToken, verifyIsOwnerOrAdmin, deleteUser);
+router.delete("/:id", authenticateToken, requireOwnerOrAdmin, deleteUser);
 
 export default router;

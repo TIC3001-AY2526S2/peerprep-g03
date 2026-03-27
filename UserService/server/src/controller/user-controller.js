@@ -12,6 +12,8 @@ import {
   updateUserPrivilegeById as _updateUserPrivilegeById,
 } from "../model/repository.js";
 
+import { ROLES } from "@peerprep/auth";
+
 export async function createUser(req, res) {
   try {
     const { username, email, password } = req.body;
@@ -112,25 +114,34 @@ export async function updateUser(req, res) {
 export async function updateUserPrivilege(req, res) {
   try {
     const { role } = req.body;
+    const userId = req.params.id;
 
-    if (role !== undefined) {
-      const userId = req.params.id;
-      if (!isValidObjectId(userId)) {
-        return res.status(404).json({ message: `User ${userId} not found` });
-      }
-      const user = await _findUserById(userId);
-      if (!user) {
-        return res.status(404).json({ message: `User ${userId} not found` });
-      }
-
-      const updatedUser = await _updateUserPrivilegeById(userId, role === "admin");
-      return res.status(200).json({
-        message: `Updated privilege for user ${userId}`,
-        data: formatUserResponse(updatedUser),
-      });
-    } else {
+    if (!role) {
       return res.status(400).json({ message: "role is missing!" });
     }
+
+    const allowedRoles = Object.values(ROLES);
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        message: `Invalid role. Allowed roles: ${allowedRoles.join(", ")}`,
+      });
+    }
+
+    if (!isValidObjectId(userId)) {
+      return res.status(404).json({ message: `User ${userId} not found` });
+    }
+
+    const user = await _findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: `User ${userId} not found` });
+    }
+
+    const updatedUser = await _updateUserPrivilegeById(userId, role);
+
+    return res.status(200).json({
+      message: `Updated privilege for user ${userId}`,
+      data: formatUserResponse(updatedUser),
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Unknown error when updating user privilege!" });
