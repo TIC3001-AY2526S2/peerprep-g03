@@ -7,13 +7,13 @@ export default function Register() {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
+    const [errors, setErrors] = useState([]);
     const [message, setMessage] = useState("");
     const navigate = useNavigate();
   
     const handleSubmit = async (e) => {
       e.preventDefault();
-      setError("");
+      setErrors([]);
       setMessage("");
       try {
         const data = await registerUser({ username, email, password, });
@@ -22,7 +22,13 @@ export default function Register() {
             navigate("/login");
           }, 1000);
       } catch (err) {
-        setError(err.message || "Registration failed");
+        // setError(err.message || "Registration failed");
+        const apiError = err.data;
+        if (apiError?.errors) {
+          setErrors([apiError.message, ...apiError.errors]);
+        } else {
+          setErrors([err.message || "Registration failed"]);
+        }
       }
     };
   
@@ -64,8 +70,20 @@ export default function Register() {
             <button type="submit">Register</button>
           </form>
   
-          {error && <p style={{ color: "red" }}>{error}</p>}
+          {/* {error && <p style={{ color: "red" }}>{error}</p>} */}
           {message && <p>{message}</p>}
+          
+          {errors.length > 0 && (
+          <div style={{ color: "red" }}>
+            <p>{errors[0]}</p>
+            <ul>
+              {errors.slice(1).map((err, index) => (
+                <li key={index}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         </div>
       </>
     );

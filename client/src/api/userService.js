@@ -1,7 +1,23 @@
 const API_BASE_AUTH = "http://localhost:3001/auth";
 const API_BASE_USER = "http://localhost:3001/users";
 
-  async function parseResponse(response) {
+//   async function parseResponse(response) {
+//     const data = await response
+//       .json()
+//       .catch(async () => ({
+//         error: (await response.text().catch(() => "")) || "",
+//       }));
+  
+//     if (!response.ok) {
+//       throw new Error(
+//         data.message || data.error || `Request failed (${response.status})`
+//       );
+//     }
+  
+//     return data;
+//   }
+
+async function parseResponse(response) {
     const data = await response
       .json()
       .catch(async () => ({
@@ -9,9 +25,13 @@ const API_BASE_USER = "http://localhost:3001/users";
       }));
   
     if (!response.ok) {
-      throw new Error(
+      const error = new Error(
         data.message || data.error || `Request failed (${response.status})`
       );
+  
+      error.data = data;
+  
+      throw error;
     }
   
     return data;
