@@ -21,10 +21,12 @@ export async function getQuestions() {
 }
 
 export async function createQuestion(payload){
+  const token = localStorage.getItem("token");
   const response = await fetch(API_BASE, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   });
@@ -33,10 +35,12 @@ export async function createQuestion(payload){
 }
 
 export async function updateQuestion(id, payload) {
+  const token = localStorage.getItem("token");
   const response = await fetch(`${API_BASE}/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   });
@@ -45,8 +49,12 @@ export async function updateQuestion(id, payload) {
 }
 
 export async function deleteQuestion(id) {
+  const token = localStorage.getItem("token");
   const response = await fetch(`${API_BASE}/${id}`, {
     method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
   return parseResponse(response);
 }
