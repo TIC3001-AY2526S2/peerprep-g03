@@ -3,12 +3,13 @@
 FROM node:24
 
 # Create app directory to hold application code inside the image.
-WORKDIR /usr/src/app
+WORKDIR /usr/src/app/UserService/server
 
 # The image comes with Node.js and NPM already installed.
 # We just need to install the rest of our dependencies.
-# Copy package.json and package-lock.json to the app directory on the image.
-COPY package*.json ./
+# Copy the service manifest and the local auth package before installing.
+COPY UserService/server/package*.json ./
+COPY packages/auth /usr/src/app/packages/auth
 
 # Install dependencies.
 RUN npm install
@@ -17,7 +18,7 @@ RUN npm install
 # RUN npm ci --omit=dev
 
 # Bundle the app's source code inside the Docker image.
-COPY . .
+COPY UserService/server ./
 
 # Expose port 3001 so it can be mapped by Docker daemon.
 EXPOSE 3001

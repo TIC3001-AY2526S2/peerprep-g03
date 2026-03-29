@@ -1,6 +1,8 @@
 services:
   question-service:
-    build: ./questionService/server
+    build:
+      context: .
+      dockerfile: ./questionService/server/Dockerfile
     ports:
       - "5000:5000"
     env_file:
@@ -12,8 +14,10 @@ services:
       - "3000:3000"
 
   user-service:
-    build: ./userService/server
+    build:
+      context: .
+      dockerfile: ./UserService/server/Dockerfile
     ports:
       - "3001:3001"
     env_file:
-      - ./userService/server/.env
+      - ./UserService/server/.env
