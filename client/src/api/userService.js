@@ -86,6 +86,21 @@ const API_BASE_USER = "http://localhost:3001/users";
   
     return parseResponse(response);
   }
+
+  export async function updateUserPrivilege(id, payload) {
+    const token = localStorage.getItem("token");
+  
+    const response = await fetch(`${API_BASE_USER}/${id}/privilege`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  
+    return parseResponse(response);
+  }
   
   export async function deleteUser(id) {
     const token = localStorage.getItem("token");

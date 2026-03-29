@@ -4,6 +4,7 @@ import {
   getUser,
   deleteUser,
   updateUser,
+  updateUserPrivilege
 } from "../api/userService";
 import { useNavigate } from "react-router-dom";
 import "../styles/QuestionList.css";
@@ -73,20 +74,23 @@ const UserRegistry = () => {
 
   const handleSave = async () => {
     try {
-      const payload = {
+        setStatusType("");
+        setStatusMessage("");
+
+      const userPayload = {
         username: editDraft.username,
         email: editDraft.email,
       };
 
-      if (isAdmin) {
-        payload.role = editDraft.role;
-      }
-
       if (editDraft.password && editDraft.password.trim() !== "") {
-        payload.password = editDraft.password;
+        userPayload.password = editDraft.password;
       }
 
-      await updateUser(editingUser.id, payload);
+      await updateUser(editingUser.id, userPayload);
+
+      if (isAdmin && editingUser.id !== currentUserId && editingUser.role !== editDraft.role) {
+        await updateUserPrivilege(editingUser.id, { role: editDraft.role });
+      }
 
       setStatusType("success");
       setStatusMessage("Updated successfully");
