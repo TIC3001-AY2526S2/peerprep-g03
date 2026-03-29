@@ -106,7 +106,7 @@ export async function updateUser(req, res) {
       }
 
       if (email) {
-        const existingUserByEmail = await _findUserByEmail(normalizedEmail);
+        const existingUserByEmail = await _findUserByEmail(normalisedEmail);
         if (existingUserByEmail && existingUserByEmail.id !== userId) {
           return res.status(409).json({ message: "email already exists" });
         }

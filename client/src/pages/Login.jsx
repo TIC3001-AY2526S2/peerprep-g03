@@ -20,7 +20,7 @@ export default function Login({ setAuth }) {
         localStorage.setItem("userId", user.id);
         localStorage.setItem("user", JSON.stringify(user));
         setAuth(true);
-        navigate("/admin/questions");
+        navigate("/questions");
       } catch (err) {
         setError(err.message || "Login failed");
       }

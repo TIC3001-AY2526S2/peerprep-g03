@@ -275,7 +275,7 @@ const handleCreateQuestion = async (e) => {
 
         <div className="header-actions">
         {isAdmin ? (
-          <button className="btn btn-secondary" onClick={() => navigate("/admin/users")} > User Registry </button>
+          <button className="btn btn-secondary" onClick={() => navigate("/users")} > User Registry </button>
         ) : (
           <button className="btn btn-secondary" onClick={() => navigate("/profile")} > My Profile </button>
         )}
@@ -314,7 +314,7 @@ const handleCreateQuestion = async (e) => {
                 {q.questionID}
               </td>
               <td>
-                <Link to={`/admin/questions/${getQuestionId(q)}`}>
+                <Link to={`/questions/${getQuestionId(q)}`}>
                 {q.title}
                 </Link>
               </td>

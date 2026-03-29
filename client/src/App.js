@@ -17,12 +17,12 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={ isAuthenticated ? ( <Navigate to="/admin/questions" /> ) : ( <Navigate to="/login" /> ) } />
+        <Route path="/" element={ isAuthenticated ? ( <Navigate to="/questions" /> ) : ( <Navigate to="/login" /> ) } />
         <Route path="/login" element={<Login setAuth={setIsAuthenticated}/>} />
         <Route path="/register" element={<Register />} />
-        <Route path="/admin/users" element={ localStorage.getItem("role") === "admin" ? ( <UserRegistry /> ) : ( <Navigate to="/login" /> ) } />
-        <Route path="/admin/questions" element={ isAuthenticated ? ( <QuestionList setAuth={setIsAuthenticated} /> ) : ( <Navigate to="/login" /> ) } />
-        <Route path="/admin/questions/:id" element={ isAuthenticated ? ( <QuestionDetail /> ) : ( <Navigate to="/login" /> ) } />
+        <Route path="/users" element={ localStorage.getItem("role") === "admin" ? ( <UserRegistry /> ) : ( <Navigate to="/login" /> ) } />
+        <Route path="/questions" element={ isAuthenticated ? ( <QuestionList setAuth={setIsAuthenticated} /> ) : ( <Navigate to="/login" /> ) } />
+        <Route path="/questions/:id" element={ isAuthenticated ? ( <QuestionDetail /> ) : ( <Navigate to="/login" /> ) } />
         <Route path="/profile" element={ isAuthenticated ? <Profile setAuth={setIsAuthenticated} /> : <Navigate to="/login" /> } />
       </Routes>
     </Router>

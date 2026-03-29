@@ -12,6 +12,7 @@ COPY questionService/server/package*.json ./
 COPY packages/auth /usr/src/app/packages/auth
 
 # Install dependencies.
+RUN cd /usr/src/app/packages/auth && npm install
 RUN npm install
 
 # Uncomment the following line if you are building code for production.
@@ -20,8 +21,8 @@ RUN npm install
 # Bundle the app's source code inside the Docker image.
 COPY questionService/server ./
 
-# Expose port 5000 so it can be mapped by Docker daemon.
-EXPOSE 5000
+# Expose port 5050 so it can be mapped by Docker daemon.
+EXPOSE 5050
 
 # Define the command to run your app using CMD which defines your runtime.
 CMD ["npm", "run","dev"]

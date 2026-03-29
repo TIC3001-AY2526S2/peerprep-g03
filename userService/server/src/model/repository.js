@@ -49,14 +49,24 @@ export async function findAllUsers() {
 }
 
 export async function updateUserById(userId, username, email, password) {
+  const updates = {};
+ 
+  if (username !== undefined) {
+    updates.username = username;
+  }
+ 
+  if (email !== undefined) {
+    updates.email = email;
+  }
+ 
+  if (password !== undefined) {
+    updates.password = password;
+  }
+ 
   return UserModel.findByIdAndUpdate(
     userId,
     {
-      $set: {
-        username,
-        email,
-        password,
-      },
+      $set: updates,
     },
     { new: true },  // return the updated user
   );

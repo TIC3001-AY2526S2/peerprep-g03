@@ -80,7 +80,7 @@ export default function Profile({ setAuth }) {
         </div>
 
         <div className="header-actions">
-          <button onClick={() => navigate("/admin/questions")} className="btn btn-secondary">
+          <button onClick={() => navigate("/questions")} className="btn btn-secondary">
             Questions
           </button>
           <button onClick={handleLogout} className="btn btn-logout">
