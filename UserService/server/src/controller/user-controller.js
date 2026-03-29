@@ -12,17 +12,22 @@ import {
   updateUserPrivilegeById as _updateUserPrivilegeById,
 } from "../model/repository.js";
 
+import { normaliseEmail } from "../helpers/normaliseEmail.js";
+import { validatePassword } from "../helpers/passwordValidator.js";
 import { ROLES } from "@peerprep/auth";
-
-function normaliseEmail(email) {
-  return typeof email === "string" ? email.trim().toLowerCase() : email;
-}
 
 export async function createUser(req, res) {
   try {
     const { username, email, password } = req.body;
 
     if (username && email && password) {
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          message: "Password does not meet security requirements",
+          errors: passwordValidation.errors,
+        });
+      }
       const normalisedEmail = normaliseEmail(email);
 
       const existingUser = await _findUserByUsernameOrEmail(username, normalisedEmail);
@@ -109,9 +114,18 @@ export async function updateUser(req, res) {
 
       let hashedPassword;
       if (password) {
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+          return res.status(400).json({
+            message: "Password does not meet security requirements",
+            errors: passwordValidation.errors,
+          });
+        }
+
         const salt = bcrypt.genSaltSync(10);
         hashedPassword = bcrypt.hashSync(password, salt);
       }
+
       const updatedUser = await _updateUserById(
         userId, 
         username, 
