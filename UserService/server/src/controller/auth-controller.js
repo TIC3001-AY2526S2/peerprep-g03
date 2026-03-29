@@ -5,9 +5,12 @@ import { signAccessToken } from "@peerprep/auth";
 
 export async function handleLogin(req, res) {
   const { email, password } = req.body;
+  
   if (email && password) {
     try {
-      const user = await _findUserByEmail(email);
+      const normalisedEmail = email.toLowerCase().trim();
+
+      const user = await _findUserByEmail(normalisedEmail);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
@@ -16,7 +19,7 @@ export async function handleLogin(req, res) {
       if (!isAuthenticated) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-
+    
       const accessToken = signAccessToken(user, { expiresIn: "1d" });
 
       return res.status(200).json(

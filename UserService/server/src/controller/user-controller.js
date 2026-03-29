@@ -14,18 +14,27 @@ import {
 
 import { ROLES } from "@peerprep/auth";
 
+function normaliseEmail(email) {
+  return typeof email === "string" ? email.trim().toLowerCase() : email;
+}
+
 export async function createUser(req, res) {
   try {
     const { username, email, password } = req.body;
+
     if (username && email && password) {
-      const existingUser = await _findUserByUsernameOrEmail(username, email);
+      const normalisedEmail = normaliseEmail(email);
+
+      const existingUser = await _findUserByUsernameOrEmail(username, normalisedEmail);
       if (existingUser) {
         return res.status(409).json({ message: "username or email already exists" });
       }
 
       const salt = bcrypt.genSaltSync(10);
       const hashedPassword = bcrypt.hashSync(password, salt);
-      const createdUser = await _createUser(username, email, hashedPassword);
+
+      const createdUser = await _createUser(username, normalisedEmail, hashedPassword);
+      
       return res.status(201).json({
         message: `Created new user ${username} successfully`,
         data: formatUserResponse(createdUser),
@@ -81,13 +90,19 @@ export async function updateUser(req, res) {
       if (!user) {
         return res.status(404).json({ message: `User ${userId} not found` });
       }
-      if (username || email) {
-        let existingUser = await _findUserByUsername(username);
-        if (existingUser && existingUser.id !== userId) {
+
+      const normalisedEmail = email ? normaliseEmail(email) : undefined;
+
+      if (username) {
+        const existingUserByUsername = await _findUserByUsername(username);
+        if (existingUserByUsername && existingUserByUsername.id !== userId) {
           return res.status(409).json({ message: "username already exists" });
         }
-        existingUser = await _findUserByEmail(email);
-        if (existingUser && existingUser.id !== userId) {
+      }
+
+      if (email) {
+        const existingUserByEmail = await _findUserByEmail(normalizedEmail);
+        if (existingUserByEmail && existingUserByEmail.id !== userId) {
           return res.status(409).json({ message: "email already exists" });
         }
       }
@@ -97,7 +112,13 @@ export async function updateUser(req, res) {
         const salt = bcrypt.genSaltSync(10);
         hashedPassword = bcrypt.hashSync(password, salt);
       }
-      const updatedUser = await _updateUserById(userId, username, email, hashedPassword);
+      const updatedUser = await _updateUserById(
+        userId, 
+        username, 
+        normalisedEmail, 
+        hashedPassword
+      );
+
       return res.status(200).json({
         message: `Updated data for user ${userId}`,
         data: formatUserResponse(updatedUser),
