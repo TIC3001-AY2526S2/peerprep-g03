@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@peerprep/auth": "file:../../packages/auth",
     "accepts": "^2.0.0",
     "body-parser": "^2.2.2",
     "bson": "^7.2.0",
