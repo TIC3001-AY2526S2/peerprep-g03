@@ -39,7 +39,7 @@ const QuestionList = ({ setAuth }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [questionStatus, setQuestionStatus] = useState("Active");
   const navigate = useNavigate();
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  const isAdmin = localStorage.getItem("role") === "admin";
 
   useEffect(() => {
     fetchQuestions();
@@ -274,11 +274,12 @@ const handleCreateQuestion = async (e) => {
         </div>
 
         <div className="header-actions">
-          {isAdmin && (
-            <button className="btn btn-secondary" onClick={() => navigate("/admin/users")} >
-              User Registry
-            </button>
-          )}
+        {isAdmin ? (
+          <button className="btn btn-secondary" onClick={() => navigate("/admin/users")} > User Registry </button>
+        ) : (
+          <button className="btn btn-secondary" onClick={() => navigate("/profile")} > My Profile </button>
+        )}
+
           <button className="btn btn-logout" onClick={handleLogout}>
             Logout
           </button>
@@ -290,7 +291,7 @@ const handleCreateQuestion = async (e) => {
     ) : null}
 
     {isAdmin && ( <button className="btn btn-add" onClick={handleOpenAdd} > Add Question </button>  )}
-    
+
     {message && <p className="success-message">{message}</p>}
     {errorMessage && <p className="error-message">{errorMessage}</p>}
 
@@ -301,7 +302,8 @@ const handleCreateQuestion = async (e) => {
           <th>Title</th>
           <th>Category</th>
           <th>Complexity</th>
-          <th colSpan="3">Created</th>
+          {/* <th colSpan="3">Created</th> */}
+          <th colSpan={isAdmin ? 3 : 1}>Created</th>
         </tr>
       </thead>
 
@@ -327,7 +329,7 @@ const handleCreateQuestion = async (e) => {
               <td>
                 {formatDateTime(q.createdAt)}
               </td>
-              <td>
+              {/* <td>
                   <button 
                     onClick={() => handleOpenEdit(q)} 
                     className="btn btn-edit"
@@ -342,7 +344,27 @@ const handleCreateQuestion = async (e) => {
                   >
                     Delete
                   </button>
-              </td>
+              </td> */}
+              {isAdmin && (
+                <>
+                  <td>
+                    <button 
+                      onClick={() => handleOpenEdit(q)} 
+                      className="btn btn-edit"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                  <td>
+                    <button 
+                      onClick={() => handleDelete(q._id)}
+                      className="btn btn-delete"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </>
+              )}
           </tr>
         ))}
       </tbody>

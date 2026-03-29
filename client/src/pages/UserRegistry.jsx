@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   getAllUsers,
+  getUser,
   deleteUser,
   updateUser,
 } from "../api/userService";
@@ -9,42 +10,91 @@ import "../styles/QuestionList.css";
 
 const UserRegistry = () => {
   const [users, setUsers] = useState([]);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editDraft, setEditDraft] = useState({});
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+
   const navigate = useNavigate();
 
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  const role = localStorage.getItem("role");
+  const isAdmin = role === "admin";
+  const currentUserId = localStorage.getItem("userId");
 
   useEffect(() => {
     if (!isAdmin) {
-      navigate("/login");
-      return;
-    }
-
-    fetchUsers();
+        navigate("/profile");
+      } else {
+        fetchUsers();
+      }
   }, []);
 
   const fetchUsers = async () => {
     try {
-      const res = await getAllUsers();
-      setUsers(res.data);
+      if (isAdmin) {
+        const res = await getAllUsers();
+        setUsers(res.data);
+      } else {
+        const res = await getUser(currentUserId);
+        setUsers([res.data]);
+      }
     } catch (err) {
       setStatusType("error");
-      setStatusMessage(err.message || "Failed to load users");
+      setStatusMessage(err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this user?")) return;
+    if (id === currentUserId) {
+      alert("You cannot delete yourself.");
+      return;
+    }
 
     try {
       await deleteUser(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
       setStatusType("success");
-      setStatusMessage("User deleted successfully.");
+      setStatusMessage("User deleted");
     } catch (err) {
       setStatusType("error");
-      setStatusMessage(err.message || "Delete failed.");
+      setStatusMessage(err.message);
+    }
+  };
+
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    setEditDraft({
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      password: "",
+    });
+  };
+
+  const handleSave = async () => {
+    try {
+      const payload = {
+        username: editDraft.username,
+        email: editDraft.email,
+      };
+
+      if (isAdmin) {
+        payload.role = editDraft.role;
+      }
+
+      if (editDraft.password && editDraft.password.trim() !== "") {
+        payload.password = editDraft.password;
+      }
+
+      await updateUser(editingUser.id, payload);
+
+      setStatusType("success");
+      setStatusMessage("Updated successfully");
+      setEditingUser(null);
+      fetchUsers();
+    } catch (err) {
+      setStatusType("error");
+      setStatusMessage(err.message);
     }
   };
 
@@ -53,36 +103,19 @@ const UserRegistry = () => {
     navigate("/login");
   };
 
-  const formatDateTime = (value) => {
-    if (!value) return "-";
-    const parsed = new Date(value);
-    return parsed.toLocaleString();
-  };
-
   return (
     <div className="question-container">
-      <div
-        className="page-header"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <div className="page-header">
         <div>
-          <h1>Admin - User Registry</h1>
-          <p>Manage all system users</p>
+          <h1>{isAdmin ? "User Registry" : "My Profile"}</h1>
+          <p>{isAdmin ? "Manage all users" : "View and update your profile"}</p>
         </div>
 
         <div className="header-actions">
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/admin/questions")}
-          >
+          <button onClick={() => navigate("/admin/questions")} className="btn btn-secondary">
             Questions
           </button>
-
-          <button className="btn btn-logout" onClick={handleLogout}>
+          <button onClick={handleLogout} className="btn btn-logout">
             Logout
           </button>
         </div>
@@ -99,9 +132,9 @@ const UserRegistry = () => {
           <tr>
             <th>Email</th>
             <th>Username</th>
-            <th>Admin</th>
+            <th>Role</th>
             <th>Created</th>
-            <th colSpan="2">Actions</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
@@ -110,31 +143,81 @@ const UserRegistry = () => {
             <tr key={user.id}>
               <td>{user.email}</td>
               <td>{user.username}</td>
+              <td>{user.role}</td>
+              <td>{new Date(user.createdAt).toLocaleString()}</td>
 
               <td>
-                <span
-                  className={`complexity ${
-                    user.isAdmin ? "Hard" : "Easy"
-                  }`}
-                >
-                  {user.isAdmin ? "Admin" : "User"}
-                </span>
-              </td>
-
-              <td>{formatDateTime(user.createdAt)}</td>
-
-              <td>
-                <button
-                  className="btn btn-delete"
-                  onClick={() => handleDelete(user.id)}
-                >
-                  Delete
+                <button className="btn btn-edit" onClick={() => handleEdit(user)}>
+                  Edit
                 </button>
+
+                {isAdmin && (
+                  <button
+                    className="btn btn-delete"
+                    onClick={() => handleDelete(user.id)}
+                  >
+                    Delete
+                  </button>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {editingUser && (
+        <div className="modal-backdrop">
+          <div className="edit-modal">
+            <h2>Edit User</h2>
+
+            <input
+              value={editDraft.username}
+              onChange={(e) =>
+                setEditDraft({ ...editDraft, username: e.target.value })
+              }
+              placeholder="Username"
+            />
+
+            <input
+              value={editDraft.email}
+              onChange={(e) =>
+                setEditDraft({ ...editDraft, email: e.target.value })
+              }
+              placeholder="Email"
+            />
+
+            <input
+            type="password"
+            placeholder="New Password (optional). Leave blank to keep password."
+            value={editDraft.password}
+            onChange={(e) =>
+                setEditDraft({ ...editDraft, password: e.target.value })
+            }
+            />
+
+            {isAdmin && (
+                <select
+                    value={editDraft.role}
+                    onChange={(e) =>
+                    setEditDraft({ ...editDraft, role: e.target.value })
+                    }
+                >
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select>
+                )}
+
+            <div className="edit-modal-actions">
+              <button onClick={handleSave} className="btn btn-edit">
+                Save
+              </button>
+              <button onClick={() => setEditingUser(null)} className="btn btn-delete">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

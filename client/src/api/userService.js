@@ -71,17 +71,19 @@ const API_BASE_USER = "http://localhost:3001/users";
     });
     return parseResponse(response);
   }
-  
+
   export async function updateUser(id, payload) {
     const token = localStorage.getItem("token");
+  
     const response = await fetch(`${API_BASE_USER}/${id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
     });
+  
     return parseResponse(response);
   }
   

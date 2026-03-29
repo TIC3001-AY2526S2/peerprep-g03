@@ -16,7 +16,9 @@ export default function Login({ setAuth }) {
         const res = await loginUser({ email, password });
         const user = res.data;
         localStorage.setItem("token", user.accessToken);
-        localStorage.setItem("isAdmin", user.isAdmin.toString());
+        localStorage.setItem("role", user.role);
+        localStorage.setItem("userId", user.id);
+        localStorage.setItem("user", JSON.stringify(user));
         setAuth(true);
         navigate("/admin/questions");
       } catch (err) {
