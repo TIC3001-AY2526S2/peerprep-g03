@@ -15,6 +15,7 @@ const UserRegistry = () => {
   const [editDraft, setEditDraft] = useState({});
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [errors, setErrors] = useState([]);
 
   const navigate = useNavigate();
 
@@ -76,29 +77,68 @@ const UserRegistry = () => {
     try {
         setStatusType("");
         setStatusMessage("");
+        setErrors([]);
 
-      const userPayload = {
-        username: editDraft.username,
-        email: editDraft.email,
-      };
-
-      if (editDraft.password && editDraft.password.trim() !== "") {
-        userPayload.password = editDraft.password;
-      }
-
-      await updateUser(editingUser.id, userPayload);
-
-      if (isAdmin && editingUser.id !== currentUserId && editingUser.role !== editDraft.role) {
-        await updateUserPrivilege(editingUser.id, { role: editDraft.role });
-      }
-
-      setStatusType("success");
-      setStatusMessage("Updated successfully");
-      setEditingUser(null);
-      fetchUsers();
+        const originalUser = users.find((u) => u.id === editingUser.id);
+        const payload = {};
+        if (
+            editDraft.username &&
+            editDraft.username !== originalUser.username
+          ) {
+            payload.username = editDraft.username;
+          }
+      
+          if (
+            editDraft.email &&
+            editDraft.email !== originalUser.email
+          ) {
+            payload.email = editDraft.email;
+          }
+      
+          if (editDraft.password && editDraft.password.trim() !== "") {
+            payload.password = editDraft.password;
+          }
+      
+          const hasUserUpdate = Object.keys(payload).length > 0;
+      
+          if (hasUserUpdate) {
+            await updateUser(editingUser.id, payload);
+          }
+      
+          const shouldUpdateRole =
+            isAdmin &&
+            editingUser.id !== currentUserId &&
+            editDraft.role !== originalUser.role;
+      
+          if (shouldUpdateRole) {
+            await updateUserPrivilege(editingUser.id, {
+              role: editDraft.role,
+            });
+          }
+      
+          if (!hasUserUpdate && !shouldUpdateRole) {
+            setStatusType("success");
+            setStatusMessage("No changes detected");
+            return;
+          }
+      
+          setStatusType("success");
+          setStatusMessage("Updated successfully");
+      
+          fetchUsers();
     } catch (err) {
-      setStatusType("error");
-      setStatusMessage(err.message);
+        const apiError = err.data;
+
+        if (apiError?.errors) {
+          setErrors([apiError.message, ...apiError.errors]);
+        } else {
+          setErrors([err.message || "Update failed"]);
+        }
+    
+        setStatusType("error");
+    } finally {
+        setEditingUser(null);
+        setEditDraft({});
     }
   };
 
@@ -130,6 +170,17 @@ const UserRegistry = () => {
           {statusMessage}
         </div>
       )}
+
+        {errors.length > 0 && (
+        <div style={{ color: "red" }}>
+            <p>{errors[0]}</p>
+            <ul>
+            {errors.slice(1).map((err, index) => (
+                <li key={index}>{err}</li>
+            ))}
+            </ul>
+        </div>
+        )}
 
       <table className="question-table">
         <thead>
@@ -199,7 +250,7 @@ const UserRegistry = () => {
             }
             />
 
-            {isAdmin && (
+            {isAdmin && editingUser.id !== currentUserId && (
                 <select
                     value={editDraft.role}
                     onChange={(e) =>

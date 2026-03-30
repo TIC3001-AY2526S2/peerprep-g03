@@ -14,7 +14,7 @@ export default function Profile({ setAuth }) {
   });
 
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState([]);
 
   const navigate = useNavigate();
 
@@ -53,18 +53,56 @@ export default function Profile({ setAuth }) {
   const handleUpdate = async (e) => {
     e.preventDefault();
     setMessage("");
-    setError("");
+    setErrors("");
 
     try {
-      const updatedUser = await updateUser(user.id, formData);
+        const payload = {};
+        if (formData.username && formData.username !== user.username) {
+            payload.username = formData.username;
+        }
+    
+        if (formData.email && formData.email !== user.email) {
+            payload.email = formData.email;
+        }
 
-      localStorage.setItem("user", JSON.stringify(updatedUser.data));
+        if (formData.password && formData.password.trim() !== "") {
+            payload.password = formData.password;
+        }
 
-      setUser(updatedUser.data);
-      setMessage("Profile updated successfully");
-      setIsEditOpen(false);
+        if (Object.keys(payload).length === 0) {
+            setMessage("No changes detected");
+            return;
+        }
+    
+        const updatedUser = await updateUser(user.id, payload);
+    
+        const newData = updatedUser.data;
+    
+        localStorage.setItem("user", JSON.stringify(newData));
+        setUser(newData);
+    
+        setFormData({
+        username: newData.username,
+        email: newData.email,
+        password: "",
+        });
+    
+        setMessage("Profile updated successfully");
     } catch (err) {
-      setError(err.message || "Update failed");
+        setFormData({
+            username: user.username,
+            email: user.email,
+            password: "",
+          });
+        const apiError = err.data;
+        if (apiError?.errors) {
+          setErrors([apiError.message, ...apiError.errors]);
+        } else {
+          setErrors([err.message || "Registration failed"]);
+        }
+    } finally {
+        setIsEditOpen(false);
+        
     }
   };
 
@@ -91,7 +129,16 @@ export default function Profile({ setAuth }) {
 
       {/* Messages */}
       {message && <div className="status-message success">{message}</div>}
-      {error && <div className="status-message error">{error}</div>}
+      {errors.length > 0 && (
+          <div style={{ color: "red" }}>
+            <p>{errors[0]}</p>
+            <ul>
+              {errors.slice(1).map((err, index) => (
+                <li key={index}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
       {/* User Details */}
       <div className="details-grid">
