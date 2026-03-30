@@ -1,15 +1,32 @@
 {
   "name": "peerprep-g03",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "questionService",
+    "userService",
+    "client"
+  ],
   "scripts": {
     "client:dev": "npm --prefix client start",
     "question:dev": "npm --prefix questionService/server run dev",
+    "user:dev": "npm --prefix userService/server run dev",
     "client:start": "npm --prefix client start",
     "question:start": "npm --prefix questionService/server start",
+    "user:start": "npm --prefix userService/server start",
     "dev": "concurrently \"npm run client:dev\" \"npm run question:dev\"",
     "start": "concurrently \"npm run question:start\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "@peerprep/auth": "workspace:*",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "mongoose": "^8.23.0",
+    "nodemon": "^3.1.14"
   }
 }
