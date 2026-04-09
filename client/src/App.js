@@ -6,6 +6,7 @@ import UserRegistry from "./pages/UserRegistry";
 import QuestionDetail from "./pages/QuestionDetail";
 import QuestionList from "./pages/QuestionList";
 import Profile from "./pages/Profile";
+import Matching from "./pages/Matching";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,6 +25,7 @@ function App() {
         <Route path="/questions" element={ isAuthenticated ? ( <QuestionList setAuth={setIsAuthenticated} /> ) : ( <Navigate to="/login" /> ) } />
         <Route path="/questions/:id" element={ isAuthenticated ? ( <QuestionDetail /> ) : ( <Navigate to="/login" /> ) } />
         <Route path="/profile" element={ isAuthenticated ? <Profile setAuth={setIsAuthenticated} /> : <Navigate to="/login" /> } />
+        <Route path="/matching" element={ isAuthenticated ? <Matching setAuth={setIsAuthenticated} /> : <Navigate to="/login" /> } />
       </Routes>
     </Router>
 

@@ -274,6 +274,7 @@ const handleCreateQuestion = async (e) => {
         </div>
 
         <div className="header-actions">
+        <button className="btn btn-secondary" onClick={() => navigate("/matching")} > Find Match </button>
         {isAdmin ? (
           <button className="btn btn-secondary" onClick={() => navigate("/users")} > User Registry </button>
         ) : (

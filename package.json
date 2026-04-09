@@ -10,12 +10,14 @@
   "scripts": {
     "client:dev": "npm --prefix client start",
     "question:dev": "npm --prefix questionService/server run dev",
+    "matching:dev": "npm --prefix matchingService/server run dev",
     "user:dev": "npm --prefix userService/server run dev",
     "client:start": "npm --prefix client start",
     "question:start": "npm --prefix questionService/server start",
+    "matching:start": "npm --prefix matchingService/server start",
     "user:start": "npm --prefix userService/server start",
-    "dev": "concurrently \"npm run client:dev\" \"npm run question:dev\"",
-    "start": "concurrently \"npm run question:start\""
+    "dev": "concurrently \"npm run client:dev\" \"npm run question:dev\" \"npm run user:dev\" \"npm run matching:dev\"",
+    "start": "concurrently \"npm run question:start\" \"npm run user:start\" \"npm run matching:start\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
