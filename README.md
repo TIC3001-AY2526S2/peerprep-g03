@@ -14,8 +14,17 @@ Create a .gitignore file and add in files that should remain in local repo
 Create a .env file under "server" folder. In .env file, add the following text: 
 MONGODB_URI="mongodb+srv://MongoDBAdm:Password1234@peerprepg03.l2ceiwp.mongodb.net/peerprep"
 
-## Start Client from project root (PEERPREP-G03)
-npm run client:start
+## Start Application from project root (PEERPREP-G03)
 
-## Start Server from project root (PEERPREP-G03)
-npm run server:start
+For the full local development setup, run:
+npm run dev
+
+
+This starts:
+- client
+- question service
+- user service
+- matching service
+
+If you only want the backend services, run:
+npm start
