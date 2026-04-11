@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import Counter from "./Counter.js";
-import { ReturnDocument } from "mongodb";
 
 const questionSchema = new mongoose.Schema(
   {
@@ -23,13 +22,17 @@ const questionSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: (arr) => Array.isArray(arr) && arr.length > 0,
-        message: "At least one topic is required"
+        message: "At least one category is required"
       }
     },
     complexity: {
       type: String,
       required: true,
       enum: ["Easy", "Medium", "Hard"]
+    },
+    categoryComplexityKey: {
+      type: String,
+      unique: true
     }
   },
   {
@@ -40,19 +43,32 @@ const questionSchema = new mongoose.Schema(
 // Auto-increment questionID before first save
 questionSchema.pre("save", async function () {
   if (!this.isNew || this.questionID != null) {
-    return next();
+    // return next();
+    return;
   }
 
   try {
     const counter = await Counter.findOneAndUpdate(
       { name: "questionID" },
       { $inc: { seq: 1 } },
-      { ReturnDocument: "after", upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     this.questionID = counter.seq;
   } catch (error) {
     console.log(error);
+  }
+});
+
+// Derive stable uniqueness key from category + complexity
+questionSchema.pre("validate", function () {
+  if (Array.isArray(this.category) && this.category.length > 0 && this.complexity) {
+    const normalizedSortedCategory = [...this.category]
+      .map((cat) => cat.trim().toLowerCase())
+      .sort();
+
+    this.categoryComplexityKey =
+      `${this.complexity.trim().toLowerCase()}|${normalizedSortedCategory.join("|")}`;
   }
 });
 

@@ -1,45 +1,7 @@
 // handler functions
 // const { getQuestionsCollection } = require("../db/mongo");
 import Question from "../models/Question.js";
-import { validateQuestionPayload } from "../utils/validators.js";
-
-// simple validation helper
-// const validateQuestionPayload = (body) => {
-//   if (!body || typeof body !== "object") return "Missing JSON body";
-  
-//   const { title, description, category, complexity } = body;
-
-//   if (!title || typeof title !== "string" || title.trim().length < 3) {
-//     return "title is required (string, min 3 chars)";
-//   }
-//   if (!description || typeof description !== "string" || description.trim().length < 10) {
-//     return "description is required (string, min 10 chars)";
-//   }
-//   // if (!Array.isArray(category) || category.length === 0) {
-//   //   return "category is required (non-empty array of strings)";
-//   // }
-//   // // ensure every element is a non-empty string
-//   // const badTopic = category.find(
-//   //   (c) => typeof c !== "string" || c.trim().length === 0
-//   // );
-//   // if (badTopic !== undefined) {
-//   //   return "each category must be a non-empty string";
-//   // }
-//   const categoryValidation = validateCategory(category);
-//   if (!categoryValidation.isValid){
-//     return res.status(400).json({
-//       error: categoryValidation.message,
-//       invalidTopics: categoryValidation.invalidTopics || []
-//     });
-//   }
-
-//   const complexityLevels = ["Easy", "Medium", "Hard"];
-//   if (!complexity || typeof complexity !== "string" || !complexityLevels.includes(complexity)) {
-//     return `complexity must be one of: ${complexityLevels.join(", ")}`;
-//   }
-
-//   return null;
-// }
+import { validateQuestionPayload, validateCategory } from "../utils/validators.js";
 
 // get all questions
 export const getAllQuestions = async (req, res) => {
@@ -63,24 +25,24 @@ export const createQuestion = async (req, res) => {
         invalidCategories: validationResult.invalidCategories || []
       });
     }
-
-    console.log("hits here- validated payload");
-
+    
     const { title, description, complexity } = req.body;
     const normalizedCategory = validationResult.normalizedCategory;
 
-    console.log("hits here- normalized categories");
+    const normalizedCategoryComplexityKey =
+      `${complexity.trim().toLowerCase()}|${[...normalizedCategory].sort().join("|")}`;
 
-    // Prevent duplicates based on same title - to be improved
-    // const existing = await Question.findOne({ 
-    //   title: title.trim()
-    // });
-      
-    // if (existing) {
-    //   return res.status(409).json({ error: "A question with this title already exists" });
-    // }
+    // Optional application-level check for friendlier error message
+    const existingQuestion = await Question.findOne({
+      categoryComplexityKey: normalizedCategoryComplexityKey
+    });
 
-    // const categoryNormalised = [...new Set(category.map(c => c.trim()))];
+    if (existingQuestion) {
+      return res.status(409).json({
+        error: "A question with the same category set and complexity already exists"
+      });
+    }
+
     const newQuestion = new Question({
       title: title.trim(),
       description: description.trim(),
@@ -88,12 +50,18 @@ export const createQuestion = async (req, res) => {
       complexity
     });
     const savedQuestion = await newQuestion.save();
-    
-    console.log("hits here- new question saved");
 
     res.status(201).json(savedQuestion);
   } catch (error) {
     console.error(error);
+
+    // DB-level unique index protection fallback
+    if (error.code === 11000 && error.keyPattern?.categoryComplexityKey) {
+      return res.status(409).json({
+        error: "A question with the same category set and complexity already exists"
+      });
+    }
+
     res.status(500).json({ error: "Failed to create question" });
   }
 };
