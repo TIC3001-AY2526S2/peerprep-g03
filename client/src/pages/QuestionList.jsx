@@ -16,6 +16,9 @@ const QuestionList = ({ setAuth }) => {
   const [fieldErrors, setFieldErrors] = useState({
     category: "",
   });
+
+  const [showCreateErrorModal, setShowCreateErrorModal] = useState(false);
+  const [createErrorText, setCreateErrorText] = useState("");
   
   const [formData, setFormData] = useState({
     title: "",
@@ -140,14 +143,54 @@ const handleCloseAdd = () => {
   resetAddForm();
 };
 
+// const handleCreateQuestion = async (e) => {
+//   e.preventDefault();
+
+//   console.log("Submit button pressed");
+//   console.log("Form data being sent:", formData);
+
+//   setMessage("");
+//   setErrorMessage("");
+
+//   const parsedCategories = parseCategories(categoryInput);
+
+//   if (parsedCategories.length === 0) {
+//     setFieldErrors((prev) => ({
+//       ...prev,
+//       category: "Please enter at least one category.",
+//     }));
+//     return;
+//   }
+
+//   const payload = {
+//     ...formData,
+//     category: parsedCategories,
+//   };
+
+//   try {
+//     const result = await createQuestion(payload);
+//     console.log("Create question success:", result);
+
+//     setStatusType("success");
+//     setStatusMessage("Question created successfully.");
+
+//     handleCloseAdd();
+//     await fetchQuestions();
+//   } catch (error) {
+//     console.error("Error creating question:", error);
+//     setErrorMessage(error.message || "Failed to create question.")
+//   }
+// };
+
 const handleCreateQuestion = async (e) => {
   e.preventDefault();
-
-  console.log("Submit button pressed");
   console.log("Form data being sent:", formData);
 
   setMessage("");
   setErrorMessage("");
+  setFieldErrors({});
+  setShowCreateErrorModal(false);
+  setCreateErrorText("");
 
   const parsedCategories = parseCategories(categoryInput);
 
@@ -171,11 +214,29 @@ const handleCreateQuestion = async (e) => {
     setStatusType("success");
     setStatusMessage("Question created successfully.");
 
+    setFieldErrors({});
+    setErrorMessage("");
+    setCreateErrorText("");
+    setShowCreateErrorModal(false);
+
     handleCloseAdd();
     await fetchQuestions();
   } catch (error) {
     console.error("Error creating question:", error);
-    setErrorMessage(error.message || "Failed to create question.")
+
+    const backendData = error?.data || {};
+    const message =
+      backendData.error || error?.message || "Failed to create question.";
+
+    if (backendData.invalidCategories?.length) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        category: `Invalid categories: ${backendData.invalidCategories.join(", ")}`
+      }));
+    } else {
+      setCreateErrorText(message);
+      setShowCreateErrorModal(true);
+    }
   }
 };
 
@@ -461,6 +522,31 @@ const handleCreateQuestion = async (e) => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    ) : null}
+
+    {showCreateErrorModal ? (
+      <div
+        className="modal-backdrop"
+        onClick={() => setShowCreateErrorModal(false)}
+      >
+        <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="edit-modal-header">
+            <h2>Create Question Error</h2>
+          </div>
+
+          <p className="field-error">{createErrorText}</p>
+
+          <div className="edit-modal-actions">
+            <button
+              type="button"
+              className="btn btn-close"
+              onClick={() => setShowCreateErrorModal(false)}
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     ) : null}
