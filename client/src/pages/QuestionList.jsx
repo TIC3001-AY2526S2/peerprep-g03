@@ -17,9 +17,12 @@ const QuestionList = ({ setAuth }) => {
     category: "",
   });
 
-  const [showCreateErrorModal, setShowCreateErrorModal] = useState(false);
-  const [createErrorText, setCreateErrorText] = useState("");
+  // const [showCreateErrorModal, setShowCreateErrorModal] = useState(false);
+  // const [createErrorText, setCreateErrorText] = useState("");
   
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusText, setStatusText] = useState("");
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -186,11 +189,9 @@ const handleCreateQuestion = async (e) => {
   e.preventDefault();
   console.log("Form data being sent:", formData);
 
-  setMessage("");
-  setErrorMessage("");
   setFieldErrors({});
-  setShowCreateErrorModal(false);
-  setCreateErrorText("");
+  setShowStatusModal(false);
+  setStatusText("");
 
   const parsedCategories = parseCategories(categoryInput);
 
@@ -211,16 +212,16 @@ const handleCreateQuestion = async (e) => {
     const result = await createQuestion(payload);
     console.log("Create question success:", result);
 
+    // ✅ SUCCESS MODAL
     setStatusType("success");
-    setStatusMessage("Question created successfully.");
+    setStatusText("Question successfully added.");
+    setShowStatusModal(true);
 
     setFieldErrors({});
-    setErrorMessage("");
-    setCreateErrorText("");
-    setShowCreateErrorModal(false);
 
-    handleCloseAdd();
+    // optional: refresh list
     await fetchQuestions();
+
   } catch (error) {
     console.error("Error creating question:", error);
 
@@ -234,8 +235,10 @@ const handleCreateQuestion = async (e) => {
         category: `Invalid categories: ${backendData.invalidCategories.join(", ")}`
       }));
     } else {
-      setCreateErrorText(message);
-      setShowCreateErrorModal(true);
+      // ❌ ERROR MODAL
+      setStatusType("error");
+      setStatusText(message);
+      setShowStatusModal(true);
     }
   }
 };
@@ -526,23 +529,40 @@ const handleCreateQuestion = async (e) => {
       </div>
     ) : null}
 
-    {showCreateErrorModal ? (
+    {showStatusModal ? (
       <div
         className="modal-backdrop"
-        onClick={() => setShowCreateErrorModal(false)}
+        onClick={() => setShowStatusModal(false)}
       >
         <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
           <div className="edit-modal-header">
-            <h2>Create Question Error</h2>
+            <h2>
+              {statusType === "success" ? "Success" : "Error"}
+            </h2>
           </div>
 
-          <p className="field-error">{createErrorText}</p>
+          <p
+            className={
+              statusType === "success"
+                ? "field-success"
+                : "field-error"
+            }
+          >
+            {statusText}
+          </p>
 
           <div className="edit-modal-actions">
             <button
               type="button"
               className="btn btn-close"
-              onClick={() => setShowCreateErrorModal(false)}
+              onClick={() => {
+                setShowStatusModal(false);
+
+                // ✅ Close form ONLY on success
+                if (statusType === "success") {
+                  handleCloseAdd();
+                }
+              }}
             >
               Close
             </button>
