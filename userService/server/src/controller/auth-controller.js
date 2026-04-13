@@ -2,7 +2,6 @@ import bcrypt from "bcrypt";
 import { findUserByEmail as _findUserByEmail } from "../model/repository.js";
 import { formatUserResponse } from "./user-controller.js";
 import { normaliseEmail } from "../helpers/normaliseEmail.js";
-// import { normaliseEmail } from "../validators/normaliseEmail.js";
 import { signAccessToken } from "@peerprep/auth";
 
 export async function handleLogin(req, res) {

@@ -34,3 +34,16 @@ services:
       USER_SERVICE_URL: http://user-service:3001
     depends_on:
       - user-service
+
+  collaboration-service:
+    build:
+      context: .
+      dockerfile: ./collaborationService/server/Dockerfile
+    ports:
+      - "5052:5052"
+    env_file:
+      - ./collaborationService/server/.env 
+    environment:
+      USER_SERVICE_URL: http://user-service:3001
+    depends_on:
+      - user-service

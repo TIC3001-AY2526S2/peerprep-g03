@@ -21,17 +21,43 @@ const DIFFICULTY_OPTIONS = ["Easy", "Medium", "Hard"];
 
 function formatTimestamp(value) {
   if (!value) return "-";
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-
   return date.toLocaleString("en-SG");
+}
+
+function getQuestionIdentity(question) {
+  return String(question?.questionID ?? question?._id ?? "").trim();
+}
+
+function selectSharedQuestion(matchId, availableQuestions) {
+  if (!matchId || availableQuestions.length === 0) {
+    return null;
+  }
+
+  const sortedQuestions = [...availableQuestions].sort((left, right) =>
+    getQuestionIdentity(left).localeCompare(getQuestionIdentity(right), undefined, {
+      numeric: true,
+      sensitivity: "base",
+    }),
+  );
+
+  let hash = 0;
+
+  for (let index = 0; index < matchId.length; index += 1) {
+    hash = (hash * 31 + matchId.charCodeAt(index)) >>> 0;
+  }
+
+  return sortedQuestions[hash % sortedQuestions.length];
 }
 
 export default function Matching({ setAuth }) {
   const navigate = useNavigate();
   const pollRef = useRef(null);
+  const previousStatusRef = useRef(null);
+  const hasAutoNavigatedRef = useRef(false);
 
+  const [questions, setQuestions] = useState([]);
   const [topicOptions, setTopicOptions] = useState(DEFAULT_TOPICS);
   const [formData, setFormData] = useState({
     topic: DEFAULT_TOPICS[0],
@@ -48,21 +74,58 @@ export default function Matching({ setAuth }) {
   const isMatched = ticket?.status === "matched";
   const isTimeout = ticket?.status === "timeout";
   const isCancelled = ticket?.status === "cancelled";
+  const hasSharedDifficulty = Object.prototype.hasOwnProperty.call(
+    ticket?.matchContext ?? {},
+    "difficulty",
+  );
+  const selectedTopicForMatch =
+    ticket?.matchContext?.topic ?? ticket?.criteria?.topic ?? formData.topic;
+  const selectedDifficultyForMatch = hasSharedDifficulty
+    ? ticket?.matchContext?.difficulty
+    : (ticket?.criteria?.difficulty ?? formData.difficulty);
 
   const queueSummary = useMemo(() => {
     if (!debugState.queue.length) return "Queue is empty.";
-
     return debugState.queue
       .map((entry) => `${entry.userId} - ${entry.topic} / ${entry.difficulty}`)
       .join(" | ");
   }, [debugState.queue]);
+
+  const matchedQuestions = useMemo(() => {
+    const shouldFilterByDifficulty = Boolean(selectedDifficultyForMatch);
+
+    return questions.filter((question) => {
+      const categories = Array.isArray(question.category)
+        ? question.category
+        : [question.category];
+      const hasMatchingTopic = categories
+        .map((category) => String(category ?? "").trim().toLowerCase())
+        .includes(String(selectedTopicForMatch ?? "").trim().toLowerCase());
+      const hasMatchingDifficulty = shouldFilterByDifficulty
+        ? String(question.complexity ?? "").trim().toLowerCase() ===
+          String(selectedDifficultyForMatch ?? "").trim().toLowerCase()
+        : true;
+      const isAvailable = String(question.status ?? "Active").trim().toLowerCase() !== "inactive";
+      return hasMatchingTopic && hasMatchingDifficulty && isAvailable;
+    });
+  }, [
+    formData.difficulty,
+    formData.topic,
+    questions,
+    selectedDifficultyForMatch,
+    selectedTopicForMatch,
+    ticket?.criteria?.difficulty,
+    ticket?.criteria?.topic,
+    ticket?.matchContext?.difficulty,
+    ticket?.matchContext?.topic,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadInitialData = async () => {
       try {
-        const [questions, debug] = await Promise.all([
+        const [loadedQuestions, debug] = await Promise.all([
           getAllQuestions().catch(() => []),
           getMatchingDebugState().catch(() => ({
             data: { waitingCount: 0, queue: [], logs: [] },
@@ -71,9 +134,11 @@ export default function Matching({ setAuth }) {
 
         if (!isMounted) return;
 
+        setQuestions(Array.isArray(loadedQuestions) ? loadedQuestions : []);
+
         const topics = Array.from(
           new Set(
-            questions.flatMap((question) =>
+            loadedQuestions.flatMap((question) =>
               Array.isArray(question.category) ? question.category : [question.category],
             ),
           ),
@@ -122,7 +187,7 @@ export default function Matching({ setAuth }) {
         setDebugState(debugResponse.data);
 
         if (ticketResponse.data.status === "matched") {
-          setFeedback("Match found. Peer details displayed below.");
+          setFeedback("Match found. Preparing a random matched question.");
           setFeedbackType("success");
         } else if (ticketResponse.data.status === "timeout") {
           setFeedback("No match found within 30 seconds. Retry or change your criteria.");
@@ -147,6 +212,62 @@ export default function Matching({ setAuth }) {
       clearInterval(pollRef.current);
     }
   }, []);
+
+  useEffect(() => {
+    if (
+      ticket?.status === "matched" &&
+      matchedQuestions.length > 0 &&
+      !hasAutoNavigatedRef.current
+    ) {
+      const randomQuestion = selectSharedQuestion(ticket?.matchId, matchedQuestions);
+
+      if (!randomQuestion) {
+        return;
+      }
+
+      const questionId = randomQuestion.questionID ?? randomQuestion._id;
+      const collaborationUrl = `/collaboration/${ticket?.matchId}?questionId=${encodeURIComponent(String(questionId))}&peerEmail=${encodeURIComponent(ticket?.peer?.email ?? "")}`;
+
+      hasAutoNavigatedRef.current = true;
+      setFeedback("Match found. Selecting the same shared question for both collaborators.");
+      setFeedbackType("success");
+      navigate(collaborationUrl, {
+        state: {
+          question: randomQuestion,
+          peerEmail: ticket?.peer?.email ?? "",
+          peerUsername: ticket?.peer?.username ?? "Matched Peer",
+          topic: selectedTopicForMatch,
+          difficulty: hasSharedDifficulty
+            ? ticket?.matchContext?.difficulty
+            : (ticket?.criteria?.difficulty ?? formData.difficulty),
+        },
+      });
+    }
+
+    if (
+      ticket?.status === "matched" &&
+      matchedQuestions.length === 0 &&
+      previousStatusRef.current !== "matched"
+    ) {
+      setFeedback(
+        hasSharedDifficulty && !selectedDifficultyForMatch
+          ? "Match found, but there are no active questions for this topic."
+          : "Match found, but there are no active questions for this topic and difficulty.",
+      );
+      setFeedbackType("error");
+    }
+
+    previousStatusRef.current = ticket?.status ?? null;
+  }, [
+    formData.difficulty,
+    formData.topic,
+    hasSharedDifficulty,
+    matchedQuestions,
+    navigate,
+    selectedDifficultyForMatch,
+    selectedTopicForMatch,
+    ticket,
+  ]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -177,7 +298,7 @@ export default function Matching({ setAuth }) {
       setTimer(response.data.remainingSeconds);
 
       if (response.data.status === "matched") {
-        setFeedback("Match found immediately.");
+        setFeedback("Match found immediately. Preparing a random matched question.");
         setFeedbackType("success");
       } else {
         setFeedback("Searching the queue for a suitable peer.");
@@ -216,6 +337,8 @@ export default function Matching({ setAuth }) {
     setTimer(30);
     setFeedback("");
     setFeedbackType("");
+    previousStatusRef.current = null;
+    hasAutoNavigatedRef.current = false;
   };
 
   return (
@@ -393,6 +516,7 @@ export default function Matching({ setAuth }) {
           </div>
         </article>
       </section>
+
     </div>
   );
 }

@@ -60,6 +60,7 @@ function buildStatus(ticket) {
     ticketId: ticket.ticketId,
     status: ticket.status,
     criteria: ticket.criteria,
+    matchContext: ticket.matchContext ?? null,
     requestedAt: ticket.requestedAt,
     expiresAt: ticket.expiresAt,
     remainingSeconds: Math.ceil(remainingMs / 1000),
@@ -102,8 +103,7 @@ function finalizeWaitingTicket(ticket, status, message) {
   ticket.remainingMs = Math.max(ticket.expiresAt - Date.now(), 0);
 }
 
-// Finds the best match candidate.
-function chooseCandidateIndex(userId, criteria) {
+function chooseCandidate(userId, criteria) {
   const exactMatchIndex = waitingQueue.findIndex(
     (ticket) =>
       ticket.user.id !== userId &&
@@ -112,13 +112,36 @@ function chooseCandidateIndex(userId, criteria) {
   );
 
   if (exactMatchIndex >= 0) {
-    return exactMatchIndex;
+    return {
+      index: exactMatchIndex,
+      matchContext: {
+        topic: criteria.topic,
+        difficulty: criteria.difficulty,
+        strategy: "topic-and-difficulty",
+      },
+    };
   }
 
-  return waitingQueue.findIndex(
+  const topicOnlyIndex = waitingQueue.findIndex(
     (ticket) =>
       ticket.user.id !== userId && ticket.criteria.topic === criteria.topic,
   );
+
+  if (topicOnlyIndex >= 0) {
+    return {
+      index: topicOnlyIndex,
+      matchContext: {
+        topic: criteria.topic,
+        difficulty: null,
+        strategy: "topic-only",
+      },
+    };
+  }
+
+  return {
+    index: -1,
+    matchContext: null,
+  };
 }
 
 // Returns the matched peer details.
@@ -155,17 +178,18 @@ export function enqueueMatchRequest({ user, criteria }) {
     message: "Searching for a peer...",
     peer: null,
     matchId: null,
+    matchContext: null,
     remainingMs: MATCH_WAIT_MS,
   };
 
   const queueBefore = snapshotQueue();
-  const candidateIndex = chooseCandidateIndex(user.id, criteria);
+  const candidate = chooseCandidate(user.id, criteria);
 
   tickets.set(ticketId, ticket);
   activeTicketByUserId.set(user.id, ticketId);
 
-  if (candidateIndex >= 0) {
-    const matchedTicket = waitingQueue[candidateIndex];
+  if (candidate.index >= 0) {
+    const matchedTicket = waitingQueue[candidate.index];
 
     finalizeWaitingTicket(matchedTicket, "matched", "Peer matched successfully.");
     finalizeWaitingTicket(ticket, "matched", "Peer matched successfully.");
@@ -173,6 +197,8 @@ export function enqueueMatchRequest({ user, criteria }) {
     const matchId = crypto.randomUUID();
     matchedTicket.matchId = matchId;
     ticket.matchId = matchId;
+    matchedTicket.matchContext = candidate.matchContext;
+    ticket.matchContext = candidate.matchContext;
     matchedTicket.peer = createPeerView(ticket);
     ticket.peer = createPeerView(matchedTicket);
     matchedTicket.remainingMs = 0;
@@ -184,6 +210,7 @@ export function enqueueMatchRequest({ user, criteria }) {
       matchId,
       users: [matchedTicket.user.id, ticket.user.id],
       criteria,
+      matchContext: candidate.matchContext,
     });
 
     return buildStatus(ticket);

@@ -297,7 +297,8 @@ const handleCreateQuestion = async (e) => {
   const handleSaveEdit = async () => {
     if (!editingQuestion?._id) {
       setStatusType("error");
-      setStatusMessage("Missing question id. Cannot update.");
+      setStatusText("Missing question id. Cannot update.");
+      setShowStatusModal(true);
       return;
     }
 
@@ -307,7 +308,7 @@ const handleCreateQuestion = async (e) => {
         questionID: Number(editDraft.questionID),
         title: editDraft.title.trim(),
         description: editDraft.description.trim(),
-        category: editDraft.category.trim(),
+        category: parseCategories(editDraft.category),
         complexity: editDraft.complexity.trim(),
       });
 
@@ -317,7 +318,10 @@ const handleCreateQuestion = async (e) => {
       handleCloseEdit();
     } catch (error) {
       setStatusType("error");
-      setStatusMessage(error.message || "Failed to update question.");
+      setStatusText(
+        error.message || "Failed to update question.",
+      );
+      setShowStatusModal(true);
     } finally {
       setIsSaving(false);
     }
@@ -529,7 +533,7 @@ const handleCreateQuestion = async (e) => {
       </div>
     ) : null}
 
-    {showStatusModal ? (
+    {false && showStatusModal ? (
       <div
         className="modal-backdrop"
         onClick={() => setShowStatusModal(false)}
@@ -639,13 +643,18 @@ const handleCreateQuestion = async (e) => {
 
             <label>
               Complexity
-              <input
+              <select
                 className="modal-input"
                 value={editDraft.complexity}
                 onChange={(e) =>
                   handleDraftChange("complexity", e.target.value)
                 }
-              />
+              >
+                <option value="">Select complexity</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
             </label>
           </div>
 
@@ -686,6 +695,47 @@ const handleCreateQuestion = async (e) => {
             </button>
             <button type="button" className="btn btn-delete" onClick={handleCloseEdit}>
               Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+
+    {showStatusModal ? (
+      <div
+        className="modal-backdrop"
+        onClick={() => setShowStatusModal(false)}
+      >
+        <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="edit-modal-header">
+            <h2>
+              {statusType === "success" ? "Success" : "Error"}
+            </h2>
+          </div>
+
+          <p
+            className={
+              statusType === "success"
+                ? "field-success"
+                : "field-error"
+            }
+          >
+            {statusText}
+          </p>
+
+          <div className="edit-modal-actions">
+            <button
+              type="button"
+              className="btn btn-close"
+              onClick={() => {
+                setShowStatusModal(false);
+
+                if (statusType === "success") {
+                  handleCloseAdd();
+                }
+              }}
+            >
+              Close
             </button>
           </div>
         </div>

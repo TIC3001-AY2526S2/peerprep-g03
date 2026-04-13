@@ -1,24 +1,52 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/vHiHb8vh)
 # TIC3001/TCX3225 Project (PeerPrep) - AY2526S2
 
-## Group: Gxx
-
-### Note:
-You are required to develop individual microservices within separate folders within this repository.
-The teaching team should be given access to the repositories, as we may require viewing the history of the repository in case of any disputes or disagreements.
+## Group: G03
 
 ## To prevent merge conflicts
 Create a .gitignore file and add in files that should remain in local repo
+## Pre-Requisites
+### Ensure the following has been installed:
+<ul> 1.	Git</ul>
+<ul> 2.	Node.js (version >= 20) </ul>
+<ul> 3. Clone code into local computer
+<ul>a.	On local computer, create a folder with any name that identifies the group’s code to be downloaded</ul>
+<ul>b.	Open command prompt from the new folder created</ul>
+<ul>c.	Type command ‘git clone https://github.com/TIC3001-AY2526S2/peerprep-g03.git’</ul>
+<ul>d.	Success: remote code downloads to computer</ul></ul>
+
 
 ## To connect to DB
-Create a .env file under "server" folder. In .env file, add the following text: 
-MONGODB_URI="mongodb+srv://MongoDBAdm:Password1234@peerprepg03.l2ceiwp.mongodb.net/peerprep"
+### Question Service
+In the <strong>questionService\server</strong> directory, copy <strong>.env.sample</strong> and paste it in the same directory, rename it to <strong>.env</strong>
+
+### User Service
+In the <strong>userService\server</strong> directory, copy <strong>.env.sample</strong> and paste it in the same directory, rename it to <strong>.env</strong>
+
+### Matching Service
+In the <strong>matchingService\server</strong> directory, copy <strong>.env.sample</strong> and paste it in the same directory, rename it to <strong>.env</strong>
+
+### Collaboration Service
+In the <strong>matchingService\server</strong> directory, copy <strong>.env.sample</strong> and paste it in the same directory, rename it to <strong>.env</strong>
 
 ## Start Application from project root (PEERPREP-G03)
+<strong>For containerization setup (Docker)</strong>
 
-For the full local development setup, run:
-npm run dev
+In the root directory (VSCode), open a Command Prompt Terminal and run
+```
+docker compose build --no-cache
+```
+Once the build completes, run
+```
+docker compose up
+```
+Once you are done, run
+```
+docker compose down
+```
 
+<strong>For the full local development setup, run:
+npm run dev</strong>
 
 This starts:
 - client
@@ -26,8 +54,9 @@ This starts:
 - user service
 - matching service
 
-If you only want the backend services, run:
-npm start
+
+## Accessing PeerPrep
+- Front-end: http://localhost:3000
 
 ## AI Use Summary
 
@@ -42,6 +71,8 @@ Allowed uses:
 - Implementation refinement for the MS4 matching service.
 - Debugging help for token validation, environment loading, and local startup issues.
 - Documentation and comment refinement for the matching service.
+- Implementation refinement for the MS5 collaboration service.
+- Debugging help for collaboration session persistence, submission confirmation flow.
 
 Verification:
 - All AI-assisted output was reviewed, edited, and tested by the authors.
