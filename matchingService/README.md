@@ -58,3 +58,6 @@ npm run dev
 - start matching with one user
 - click `Cancel` before the timer expires
 - verify that the request is removed from the queue snapshot
+
+## References
+- W3Tutorials.net, “Node.js In-Memory Queue: A Comprehensive Guide,” used as a conceptual reference for implementing the temporary in-memory queue in the matching service: https://www.w3tutorials.net/blog/nodejs-in-memory-queue/
