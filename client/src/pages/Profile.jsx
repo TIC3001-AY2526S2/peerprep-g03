@@ -118,6 +118,9 @@ export default function Profile({ setAuth }) {
         </div>
 
         <div className="header-actions">
+          <button onClick={() => navigate("/matching")} className="btn btn-secondary">
+            Find Match
+          </button>
           <button onClick={() => navigate("/questions")} className="btn btn-secondary">
             Questions
           </button>

@@ -14,8 +14,38 @@ Create a .gitignore file and add in files that should remain in local repo
 Create a .env file under "server" folder. In .env file, add the following text: 
 MONGODB_URI="mongodb+srv://MongoDBAdm:Password1234@peerprepg03.l2ceiwp.mongodb.net/peerprep"
 
-## Start Client from project root (PEERPREP-G03)
-npm run client:start
+## Start Application from project root (PEERPREP-G03)
 
-## Start Server from project root (PEERPREP-G03)
-npm run server:start
+For the full local development setup, run:
+npm run dev
+
+
+This starts:
+- client
+- question service
+- user service
+- matching service
+
+If you only want the backend services, run:
+npm start
+
+## AI Use Summary
+
+Tools:
+- ChatGPT 5.4
+
+Prohibited phases avoided:
+- Requirements elicitation and prioritization were done by the team.
+- Architecture and service-boundary decisions were made by the team.
+
+Allowed uses:
+- Implementation refinement for the MS4 matching service.
+- Debugging help for token validation, environment loading, and local startup issues.
+- Documentation and comment refinement for the matching service.
+
+Verification:
+- All AI-assisted output was reviewed, edited, and tested by the authors.
+- Final code and design responsibility remained with the team.
+
+Prompts and key exchanges:
+- See [ai/usage-log.md](./ai/usage-log.md)

@@ -58,8 +58,13 @@ async function parseResponse(response) {
   }
 
   export async function getUser(id) {
+    const token = localStorage.getItem("token");
     const response = await fetch(`${API_BASE_USER}/${id}`, {
         method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       return parseResponse(response);
   }
