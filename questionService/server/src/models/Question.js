@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Counter from "./Counter.js";
+import { MAX_CATEGORY_COUNT } from "../constants/categories.js";
 
 const questionSchema = new mongoose.Schema(
   {
@@ -21,8 +22,11 @@ const questionSchema = new mongoose.Schema(
       type: [String],
       required: true,
       validate: {
-        validator: (arr) => Array.isArray(arr) && arr.length > 0,
-        message: "At least one category is required"
+        validator: (arr) => 
+          Array.isArray(arr) && 
+          arr.length > 0 &&
+          arr.length <= MAX_CATEGORY_COUNT,
+        message: "There should be between 1 to ${MAX_CATEGORY_COUNT} categories."
       }
     },
     complexity: {
@@ -30,8 +34,13 @@ const questionSchema = new mongoose.Schema(
       required: true,
       enum: ["Easy", "Medium", "Hard"]
     },
-    categoryComplexityKey: {
+    // categoryComplexityKey: {
+    //   type: String,
+    //   unique: true
+    // }
+    uniqueQuestionKey: {
       type: String,
+      required: true,
       unique: true
     }
   },
@@ -40,35 +49,39 @@ const questionSchema = new mongoose.Schema(
   }
 );
 
+questionSchema.index({ uniqueQuestionKey: 1 }, { unique: true });
+
 // Auto-increment questionID before first save
 questionSchema.pre("save", async function () {
   if (!this.isNew || this.questionID != null) {
-    // return next();
     return;
   }
 
-  try {
-    const counter = await Counter.findOneAndUpdate(
-      { name: "questionID" },
-      { $inc: { seq: 1 } },
-      { returnDocument: "after", upsert: true }
-    );
+  const counter = await Counter.findOneAndUpdate(
+    { name: "questionID" },
+    { $inc: { seq: 1 } },
+    { returnDocument: "after", upsert: true }
+  );
 
-    this.questionID = counter.seq;
-  } catch (error) {
-    console.log(error);
-  }
+  this.questionID = counter.seq;
 });
 
-// Derive stable uniqueness key from category + complexity
+// Build stable unique key
 questionSchema.pre("validate", function () {
-  if (Array.isArray(this.category) && this.category.length > 0 && this.complexity) {
+  if (
+    typeof this.title === "string" &&
+    Array.isArray(this.category) &&
+    this.category.length > 0 &&
+    typeof this.complexity === "string"
+  ) {
+    const normalizedTitle = this.title.trim().toLowerCase();
     const normalizedSortedCategory = [...this.category]
       .map((cat) => cat.trim().toLowerCase())
       .sort();
+    const normalizedComplexity = this.complexity.trim().toLowerCase();
 
-    this.categoryComplexityKey =
-      `${this.complexity.trim().toLowerCase()}|${normalizedSortedCategory.join("|")}`;
+    this.uniqueQuestionKey =
+      `${normalizedTitle}|${normalizedComplexity}|${normalizedSortedCategory.join("|")}`;
   }
 });
 
