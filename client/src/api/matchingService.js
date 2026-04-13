@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT 5.4
+Date: 2026-04-09 to 2026-04-13
+Scope: Assisted with implementation refinement for the matching-service API calls.
+Author review: I reviewed, edited, tested, and verified the final code. Requirements and architecture decisions were made by the team without AI.
+*/
 const API_BASE = "http://localhost:5051/api/matching";
 
 async function parseResponse(response) {
@@ -16,6 +23,7 @@ async function parseResponse(response) {
   return data;
 }
 
+// Adds the auth token to matching requests.
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
   return {
@@ -24,6 +32,7 @@ function getAuthHeaders() {
   };
 }
 
+// Starts a matching request.
 export async function createMatchTicket(payload) {
   const response = await fetch(`${API_BASE}/tickets`, {
     method: "POST",
@@ -34,6 +43,7 @@ export async function createMatchTicket(payload) {
   return parseResponse(response);
 }
 
+// Gets the current ticket status.
 export async function getMatchTicket(ticketId) {
   const response = await fetch(`${API_BASE}/tickets/${ticketId}`, {
     method: "GET",
@@ -43,6 +53,7 @@ export async function getMatchTicket(ticketId) {
   return parseResponse(response);
 }
 
+// Cancels the current matching request.
 export async function cancelMatchTicket(ticketId) {
   const response = await fetch(`${API_BASE}/tickets/${ticketId}`, {
     method: "DELETE",
@@ -52,6 +63,7 @@ export async function cancelMatchTicket(ticketId) {
   return parseResponse(response);
 }
 
+// Gets queue snapshot and debug logs.
 export async function getMatchingDebugState() {
   const response = await fetch(`${API_BASE}/debug`, {
     method: "GET",

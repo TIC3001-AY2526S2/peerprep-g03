@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT 5.4
+Date: 2026-04-09 to 2026-04-13
+Scope: Assisted with implementation refinement and debugging for the in-memory matching queue and timeout handling.
+Author review: I reviewed, edited, tested, and verified the final code. Requirements and architecture decisions were made by the team without AI.
+*/
 import crypto from "node:crypto";
 
 const MATCH_WAIT_MS = 30_000;
@@ -7,6 +14,7 @@ const tickets = new Map();
 const activeTicketByUserId = new Map();
 const recentLogs = [];
 
+// Returns the current queue state for the frontend.
 function snapshotQueue() {
   return waitingQueue.map((ticket) => ({
     ticketId: ticket.ticketId,
@@ -17,6 +25,7 @@ function snapshotQueue() {
   }));
 }
 
+// Stores queue events for the debug panel.
 function writeLog(event, detail = {}) {
   recentLogs.unshift({
     id: crypto.randomUUID(),
@@ -31,6 +40,7 @@ function writeLog(event, detail = {}) {
   }
 }
 
+// Clears the timer for a ticket.
 function clearTicketTimer(ticket) {
   if (ticket.timeoutHandle) {
     clearTimeout(ticket.timeoutHandle);
@@ -38,6 +48,7 @@ function clearTicketTimer(ticket) {
   }
 }
 
+// Returns the ticket data used by the frontend.
 function buildStatus(ticket) {
   const now = Date.now();
   const remainingMs =
@@ -69,6 +80,7 @@ function buildStatus(ticket) {
   };
 }
 
+// Removes a ticket from the queue.
 function removeWaitingTicket(ticketId) {
   const index = waitingQueue.findIndex((ticket) => ticket.ticketId === ticketId);
   if (index >= 0) {
@@ -76,6 +88,7 @@ function removeWaitingTicket(ticketId) {
   }
 }
 
+// Finalises a waiting ticket.
 function finalizeWaitingTicket(ticket, status, message) {
   if (!ticket || ticket.status !== "waiting") {
     return;
@@ -89,6 +102,7 @@ function finalizeWaitingTicket(ticket, status, message) {
   ticket.remainingMs = Math.max(ticket.expiresAt - Date.now(), 0);
 }
 
+// Finds the best match candidate.
 function chooseCandidateIndex(userId, criteria) {
   const exactMatchIndex = waitingQueue.findIndex(
     (ticket) =>
@@ -107,6 +121,7 @@ function chooseCandidateIndex(userId, criteria) {
   );
 }
 
+// Returns the matched peer details.
 function createPeerView(ticket) {
   return {
     id: ticket.user.id,
@@ -115,6 +130,7 @@ function createPeerView(ticket) {
   };
 }
 
+// Adds a user to the queue or matches immediately.
 export function enqueueMatchRequest({ user, criteria }) {
   const existingTicketId = activeTicketByUserId.get(user.id);
   if (existingTicketId) {
@@ -200,6 +216,7 @@ export function enqueueMatchRequest({ user, criteria }) {
   return buildStatus(ticket);
 }
 
+// Returns the current ticket status.
 export function getTicketStatus(ticketId, requesterId) {
   const ticket = tickets.get(ticketId);
   if (!ticket) {
@@ -213,6 +230,7 @@ export function getTicketStatus(ticketId, requesterId) {
   return buildStatus(ticket);
 }
 
+// Cancels a waiting ticket.
 export function cancelTicket(ticketId, requesterId) {
   const ticket = tickets.get(ticketId);
   if (!ticket) {
@@ -240,6 +258,7 @@ export function cancelTicket(ticketId, requesterId) {
   return buildStatus(ticket);
 }
 
+// Returns queue snapshot and recent logs.
 export function getDebugState() {
   return {
     waitingCount: waitingQueue.length,

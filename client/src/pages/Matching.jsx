@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT 5.4
+Date: 2026-04-09 to 2026-04-13
+Scope: Assisted with implementation refinement and debugging for the matching page, timer, queue snapshot, and debug log display.
+Author review: I reviewed, edited, tested, and verified the final code. Requirements and architecture decisions were made by the team without AI.
+*/
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -102,6 +109,7 @@ export default function Matching({ setAuth }) {
       return undefined;
     }
 
+    // Polls ticket status every second.
     pollRef.current = setInterval(async () => {
       try {
         const [ticketResponse, debugResponse] = await Promise.all([
@@ -114,7 +122,7 @@ export default function Matching({ setAuth }) {
         setDebugState(debugResponse.data);
 
         if (ticketResponse.data.status === "matched") {
-          setFeedback("Match found. This screen can be used for the successful match demo.");
+          setFeedback("Match found. Peer details displayed below.");
           setFeedbackType("success");
         } else if (ticketResponse.data.status === "timeout") {
           setFeedback("No match found within 30 seconds. Retry or change your criteria.");
@@ -146,6 +154,7 @@ export default function Matching({ setAuth }) {
     navigate("/login");
   };
 
+  // Refreshes queue data.
   const refreshDebugState = async () => {
     try {
       const response = await getMatchingDebugState();
@@ -155,6 +164,7 @@ export default function Matching({ setAuth }) {
     }
   };
 
+  // Starts matching with the selected criteria.
   const handleStartMatching = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -183,6 +193,7 @@ export default function Matching({ setAuth }) {
     }
   };
 
+  // Cancels the current match request.
   const handleCancel = async () => {
     if (!ticket?.ticketId) return;
 
@@ -199,6 +210,7 @@ export default function Matching({ setAuth }) {
     }
   };
 
+  // Resets the page for another attempt.
   const handleRetry = () => {
     setTicket(null);
     setTimer(30);

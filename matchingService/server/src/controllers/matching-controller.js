@@ -1,3 +1,10 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT 5.4
+Date: 2026-04-09 to 2026-04-13
+Scope: Assisted with implementation refinement and debugging for matching request handling and queue status endpoints.
+Author review: I reviewed, edited, tested, and verified the final code. Requirements and architecture decisions were made by the team without AI.
+*/
 import { getUserProfile } from "../services/user-service.js";
 import {
   cancelTicket,
@@ -6,6 +13,7 @@ import {
   getTicketStatus,
 } from "../services/matching-queue.js";
 
+// Validates topic and difficulty.
 function validateCriteria(body) {
   const topic = String(body?.topic ?? "").trim();
   const difficulty = String(body?.difficulty ?? "").trim();
@@ -22,6 +30,7 @@ function validateCriteria(body) {
   return { topic, difficulty };
 }
 
+// Creates a matching ticket.
 export async function createMatchTicket(req, res) {
   const criteria = validateCriteria(req.body);
   if (criteria.error) {
@@ -56,6 +65,7 @@ export async function createMatchTicket(req, res) {
   }
 }
 
+// Returns the current ticket status.
 export function getMatchTicketStatus(req, res) {
   const ticket = getTicketStatus(req.params.ticketId, req.user.id);
 
@@ -70,6 +80,7 @@ export function getMatchTicketStatus(req, res) {
   return res.status(200).json({ message: "Match ticket loaded.", data: ticket });
 }
 
+// Cancels the current ticket.
 export function cancelMatchTicket(req, res) {
   const ticket = cancelTicket(req.params.ticketId, req.user.id);
 
@@ -84,6 +95,7 @@ export function cancelMatchTicket(req, res) {
   return res.status(200).json({ message: ticket.message, data: ticket });
 }
 
+// Returns queue snapshot and logs.
 export function getQueueDebugState(req, res) {
   return res.status(200).json({
     message: "Queue debug state loaded.",
