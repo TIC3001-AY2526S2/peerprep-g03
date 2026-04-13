@@ -1,0 +1,49 @@
+services:
+  question-service:
+    build:
+      context: .
+      dockerfile: ./questionService/server/Dockerfile
+    ports:
+      - "5050:5050"
+    env_file:
+      - ./questionService/server/.env
+
+  client:
+    build: ./client
+    ports:
+      - "3000:3000"
+
+  user-service:
+    build:
+      context: .
+      dockerfile: ./userService/server/Dockerfile
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./userService/server/.env
+
+  matching-service:
+    build:
+      context: .
+      dockerfile: ./matchingService/server/Dockerfile
+    ports:
+      - "5051:5051"
+    env_file:
+      - ./matchingService/server/.env
+    environment:
+      USER_SERVICE_URL: http://user-service:3001
+    depends_on:
+      - user-service
+
+  collaboration-service:
+    build:
+      context: .
+      dockerfile: ./collaborationService/server/Dockerfile
+    ports:
+      - "5052:5052"
+    env_file:
+      - ./collaborationService/server/.env 
+    environment:
+      USER_SERVICE_URL: http://user-service:3001
+    depends_on:
+      - user-service
