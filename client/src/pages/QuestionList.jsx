@@ -632,7 +632,7 @@ const handleCreateQuestion = async (e) => {
                 className="modal-input"
                 value={editDraft.category}
                 onChange={(e) =>
-                  handleDraftChange("category", e.target.value)
+                  handleDraftChange("category (Max 3)", e.target.value)
                 }
               />
             </label>
