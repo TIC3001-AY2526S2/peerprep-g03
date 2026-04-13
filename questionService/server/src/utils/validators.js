@@ -1,40 +1,53 @@
-import { VALID_CATEGORIES } from "../constants/categories.js";
+import { VALID_CATEGORIES, ACRONYMS, MAX_CATEGORY_COUNT } from "../constants/categories.js";
 
 // 1. Define special acronyms in categories setlist that are in all caps.
-const ACRONYMS = ["SQL", "IOT"];
 
 export const normalizeCategories = (categories) => {
 // If the input isn't an array, return empty to prevent errors.
-    if (!Array.isArray(categories)) return [];
+  if (!Array.isArray(categories)) return [];
+
 // Helper function to capitalize the first letter of each word (Title Case).
-    const toTitleCase = (str) =>
-        str
-            .trim()
-            .split(/\s+/) // Splits by any whitespace to handle multiple spaces.
-            .map((word) => {
-                const upperWord = word.toUpperCase();
-                // 2. If the word is an acronym, return it fully capitalized.
-                if (ACRONYMS.includes(upperWord)) {
-                return upperWord;
-                }
-                // 3. Otherwise, apply standard Title Case.
-                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-            })
-            .join(" ");
-    
-    return [
-        ...new Set(
-            categories
-                .map((cat) => toTitleCase(cat))
-        ),
-    ];
+  const toTitleCase = (str) =>
+    str
+      .trim()
+      .split(/\s+/)
+      .map((word) => {
+        const upperWord = word.toUpperCase();
+
+        if (ACRONYMS.includes(upperWord)) {
+          return upperWord;
+        }
+
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(" ");
+
+  const normalized = categories
+    .filter((cat) => typeof cat === "string" && cat.trim().length > 0)
+    .map((cat) => toTitleCase(cat))
+    .map((cat) => {
+      const matchedCategory = VALID_CATEGORIES.find(
+        (validCategory) => validCategory.toLowerCase() === cat.toLowerCase()
+      );
+      return matchedCategory || null;
+    })
+    .filter(Boolean);
+
+  return [...new Set(normalized)].sort((a, b) => a.localeCompare(b));
 };
 
 export const validateCategory = (categories) => {
   if (!Array.isArray(categories) || categories.length === 0) {
     return {
       isValid: false,
-      message: "categories must be a non-empty array"
+      message: "Category must contain at least 1 value."
+    };
+  }
+
+  if (categories.length > MAX_CATEGORY_COUNT) {
+    return {
+      isValid: false,
+      message: `Category cannot contain more than ${MAX_CATEGORY_COUNT} values.`
     };
   }
 
@@ -47,7 +60,7 @@ export const validateCategory = (categories) => {
   if (invalidCategories.length > 0) {
     return {
       isValid: false,
-      message: "One or more categories are invalid",
+      message: "One or more categories are invalid.",
       invalidCategories
     };
   }
@@ -63,7 +76,7 @@ export const validateQuestionPayload = (body) => {
   if (!body || typeof body !== "object") {
     return {
       isValid: false,
-      error: "Missing JSON body"
+      error: "Missing JSON body."
     };
   }
 
@@ -72,14 +85,14 @@ export const validateQuestionPayload = (body) => {
   if (!title || typeof title !== "string" || title.trim().length < 3) {
     return {
       isValid: false,
-      error: "title is required (string, min 3 chars)"
+      error: "Title is required and must be at least 3 characters."
     };
   }
 
   if (!description || typeof description !== "string" || description.trim().length < 10) {
     return {
       isValid: false,
-      error: "description is required (string, min 10 chars)"
+      error: "Description is required and must be at least 10 characters."
     };
   }
 
@@ -106,6 +119,6 @@ export const validateQuestionPayload = (body) => {
 
   return {
     isValid: true,
-    normalizedCategory: categoryValidation.normalizedCategories
+    normalizedCategories: categoryValidation.normalizedCategories
   };
 };

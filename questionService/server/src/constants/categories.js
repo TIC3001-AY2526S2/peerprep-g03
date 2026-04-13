@@ -1,3 +1,5 @@
+export const MAX_CATEGORY_COUNT = 3;
+
 export const VALID_CATEGORIES = [
   "Algorithms",
   "Data Structures",
@@ -26,6 +28,7 @@ export const VALID_CATEGORIES = [
   "Database Design",
   "SQL",
   "NoSQL",
+  "NOSQL",
   "Data Modeling",
   "Web Development",
   "Frontend Development",
@@ -95,3 +98,6 @@ export const VALID_CATEGORIES = [
   "Breadth-First Search",
   "Union-Find"
 ];
+
+
+export const ACRONYMS = ["SQL", "NOSQL", "IOT"];
