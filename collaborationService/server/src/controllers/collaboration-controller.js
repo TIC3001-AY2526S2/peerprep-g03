@@ -1,16 +1,25 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT 5.4, date: 2026-04-11 to 2026-04-13
+Scope: Assisted with implementation refinement and debugs for collaboration-session persistence and answer submission flow. 
+Author review: I reviewed, edited, tested, and verified the code. Requirements and architecture decisions were made by the team without AI.
+*/
 import QuestionAnswer from "../models/question-answer.js";
 import CollaborationSession from "../models/collaboration-session.js";
 
 const matchSessionLocks = new Map();
 
+// Updates all the email to be trimmed and lowercased for consistent storage.
 function normaliseEmail(value) {
   return String(value ?? "").trim().toLowerCase();
 }
 
+// Updates questionId to be trimmed for consistent storage.
 function normaliseQuestionId(value) {
   return String(value ?? "").trim();
 }
 
+// Builds a consistent participant pair object with sorted emails to ensure uniqueness regardless of order.
 function buildParticipantPair(currentUserEmail, peerEmail) {
   const emails = [normaliseEmail(currentUserEmail), normaliseEmail(peerEmail)].sort();
   return {
@@ -19,6 +28,7 @@ function buildParticipantPair(currentUserEmail, peerEmail) {
   };
 }
 
+// Builds a MongoDB filter to find a collaboration session for the given question and participant pair, regardless of email order.
 function buildLookupFilter(questionId, currentUserEmail, peerEmail) {
   const selfEmail = normaliseEmail(currentUserEmail);
   const collaboratorEmail = normaliseEmail(peerEmail);
@@ -38,24 +48,8 @@ function buildLookupFilter(questionId, currentUserEmail, peerEmail) {
   };
 }
 
-// function buildParticipantMatchFilter(currentUserEmail, peerEmail) {
-//   const selfEmail = normaliseEmail(currentUserEmail);
-//   const collaboratorEmail = normaliseEmail(peerEmail);
-
-//   return {
-//     $or: [
-//       {
-//         collabUser1Email: selfEmail,
-//         collabUser2Email: collaboratorEmail,
-//       },
-//       {
-//         collabUser1Email: collaboratorEmail,
-//         collabUser2Email: selfEmail,
-//       },
-//     ],
-//   };
-// }
-
+// Finds the canonical collaboration session document for a given matchId. This is necessary because multiple sessions may be created for the same matchId due to the way sessions are created and updated. 
+// The canonical session is determined by sorting by _id and taking the first document, which ensures consistency in which session is used for a matchId.
 async function findCanonicalSessionByMatchId(matchId) {
   if (!matchId) {
     return null;
@@ -72,6 +66,8 @@ async function findCanonicalSessionByMatchId(matchId) {
   return sessions[0];
 }
 
+// Ensures that operations for the same matchId are executed sequentially to prevent race conditions when creating or updating collaboration sessions. 
+// Operations for different matchIds can proceed in parallel.
 async function withMatchSessionLock(matchId, operation) {
   if (!matchId) {
     return operation();
@@ -99,6 +95,7 @@ async function withMatchSessionLock(matchId, operation) {
   }
 }
 
+// Validates the request parameters and returns an error message if validation fails, or null if validation succeeds.
 function validateSessionRequest({ questionId, peerEmail, currentUserEmail }) {
   if (!normaliseQuestionId(questionId)) {
     return "Question ID is required.";
@@ -119,6 +116,7 @@ function validateSessionRequest({ questionId, peerEmail, currentUserEmail }) {
   return null;
 }
 
+// Builds a consistent response object for both collaboration sessions and question answers, with fields to indicate pending submissions and their status.
 function buildSessionResponse(document, matchId) {
   return {
     id: document._id,
@@ -141,6 +139,9 @@ function buildSessionResponse(document, matchId) {
   };
 }
 
+// Finds an existing collaboration session for the given matchId, questionId, and participant pair. 
+// If no session exists, creates a new one. If a session exists but does not have the matchId, updates it to include the matchId. 
+// The operation is performed with a lock on the matchId to prevent race conditions when multiple requests for the same matchId are processed concurrently. 
 async function findOrCreateSession({ matchId, questionId, currentUserEmail, peerEmail }) {
   return withMatchSessionLock(matchId, async () => {
     let session = null;
@@ -179,6 +180,7 @@ async function findOrCreateSession({ matchId, questionId, currentUserEmail, peer
   });
 }
 
+// Function to get or create a collaboration session for a given matchId, questionId, and participant pair.
 export async function getOrCreateCollaborationSession(req, res) {
   try {
     const { matchId } = req.params;
@@ -212,6 +214,8 @@ export async function getOrCreateCollaborationSession(req, res) {
   }
 }
 
+// Function to save the current answer for a collaboration session without submitting it. 
+// This allows users to save their progress without requesting submission approval.
 export async function saveCollaborationAnswer(req, res) {
   try {
     const { matchId } = req.params;
@@ -254,6 +258,8 @@ export async function saveCollaborationAnswer(req, res) {
   }
 }
 
+// Function to request submission approval for a collaboration answer. 
+// This sets the pending submission fields in the collaboration session, which can then be confirmed by the peer to create a question answer record.
 export async function submitCollaborationAnswer(req, res) {
   try {
     const { matchId } = req.params;
@@ -294,6 +300,8 @@ export async function submitCollaborationAnswer(req, res) {
   }
 }
 
+// Function to confirm a pending collaboration submission. 
+// This creates a question answer record and clears the pending submission fields in the collaboration session.
 export async function confirmCollaborationSubmission(req, res) {
   try {
     const { matchId } = req.params;

@@ -1,3 +1,9 @@
+/*
+AI Assistance Disclosure:
+Tool: ChatGPT 5.4, date: 2026-04-11 to 2026-04-13
+Scope: Assisted with implementation refinement for the synchronized editor page, polling flow, and peer-confirmation flow. 
+Author review: I reviewed, edited, tested, and verified the final code. Requirements and architecture decisions were made by the team without AI.
+*/
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {

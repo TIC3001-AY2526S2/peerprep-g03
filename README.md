@@ -42,6 +42,8 @@ Allowed uses:
 - Implementation refinement for the MS4 matching service.
 - Debugging help for token validation, environment loading, and local startup issues.
 - Documentation and comment refinement for the matching service.
+- Implementation refinement for the MS5 collaboration service.
+- Debugging help for collaboration session persistence, submission confirmation flow.
 
 Verification:
 - All AI-assisted output was reviewed, edited, and tested by the authors.
