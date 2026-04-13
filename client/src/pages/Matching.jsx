@@ -74,6 +74,15 @@ export default function Matching({ setAuth }) {
   const isMatched = ticket?.status === "matched";
   const isTimeout = ticket?.status === "timeout";
   const isCancelled = ticket?.status === "cancelled";
+  const hasSharedDifficulty = Object.prototype.hasOwnProperty.call(
+    ticket?.matchContext ?? {},
+    "difficulty",
+  );
+  const selectedTopicForMatch =
+    ticket?.matchContext?.topic ?? ticket?.criteria?.topic ?? formData.topic;
+  const selectedDifficultyForMatch = hasSharedDifficulty
+    ? ticket?.matchContext?.difficulty
+    : (ticket?.criteria?.difficulty ?? formData.difficulty);
 
   const queueSummary = useMemo(() => {
     if (!debugState.queue.length) return "Queue is empty.";
@@ -83,11 +92,7 @@ export default function Matching({ setAuth }) {
   }, [debugState.queue]);
 
   const matchedQuestions = useMemo(() => {
-    const selectedTopic =
-      ticket?.matchContext?.topic ?? ticket?.criteria?.topic ?? formData.topic;
-    const selectedDifficulty =
-      ticket?.matchContext?.difficulty ?? ticket?.criteria?.difficulty ?? formData.difficulty;
-    const shouldFilterByDifficulty = Boolean(selectedDifficulty);
+    const shouldFilterByDifficulty = Boolean(selectedDifficultyForMatch);
 
     return questions.filter((question) => {
       const categories = Array.isArray(question.category)
@@ -95,10 +100,10 @@ export default function Matching({ setAuth }) {
         : [question.category];
       const hasMatchingTopic = categories
         .map((category) => String(category ?? "").trim().toLowerCase())
-        .includes(String(selectedTopic ?? "").trim().toLowerCase());
+        .includes(String(selectedTopicForMatch ?? "").trim().toLowerCase());
       const hasMatchingDifficulty = shouldFilterByDifficulty
         ? String(question.complexity ?? "").trim().toLowerCase() ===
-          String(selectedDifficulty ?? "").trim().toLowerCase()
+          String(selectedDifficultyForMatch ?? "").trim().toLowerCase()
         : true;
       const isAvailable = String(question.status ?? "Active").trim().toLowerCase() !== "inactive";
       return hasMatchingTopic && hasMatchingDifficulty && isAvailable;
@@ -107,6 +112,8 @@ export default function Matching({ setAuth }) {
     formData.difficulty,
     formData.topic,
     questions,
+    selectedDifficultyForMatch,
+    selectedTopicForMatch,
     ticket?.criteria?.difficulty,
     ticket?.criteria?.topic,
     ticket?.matchContext?.difficulty,
@@ -229,11 +236,10 @@ export default function Matching({ setAuth }) {
           question: randomQuestion,
           peerEmail: ticket?.peer?.email ?? "",
           peerUsername: ticket?.peer?.username ?? "Matched Peer",
-          topic: ticket?.matchContext?.topic ?? ticket?.criteria?.topic ?? formData.topic,
-          difficulty:
-            ticket?.matchContext?.difficulty ??
-            ticket?.criteria?.difficulty ??
-            formData.difficulty,
+          topic: selectedTopicForMatch,
+          difficulty: hasSharedDifficulty
+            ? ticket?.matchContext?.difficulty
+            : (ticket?.criteria?.difficulty ?? formData.difficulty),
         },
       });
     }
@@ -243,12 +249,25 @@ export default function Matching({ setAuth }) {
       matchedQuestions.length === 0 &&
       previousStatusRef.current !== "matched"
     ) {
-      setFeedback("Match found, but there are no active questions for this topic and difficulty.");
+      setFeedback(
+        hasSharedDifficulty && !selectedDifficultyForMatch
+          ? "Match found, but there are no active questions for this topic."
+          : "Match found, but there are no active questions for this topic and difficulty.",
+      );
       setFeedbackType("error");
     }
 
     previousStatusRef.current = ticket?.status ?? null;
-  }, [formData.difficulty, formData.topic, matchedQuestions, navigate, ticket]);
+  }, [
+    formData.difficulty,
+    formData.topic,
+    hasSharedDifficulty,
+    matchedQuestions,
+    navigate,
+    selectedDifficultyForMatch,
+    selectedTopicForMatch,
+    ticket,
+  ]);
 
   const handleLogout = () => {
     localStorage.clear();

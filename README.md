@@ -1,11 +1,7 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/vHiHb8vh)
 # TIC3001/TCX3225 Project (PeerPrep) - AY2526S2
 
-## Group: Gxx
-
-### Note:
-You are required to develop individual microservices within separate folders within this repository.
-The teaching team should be given access to the repositories, as we may require viewing the history of the repository in case of any disputes or disagreements.
+## Group: G03
 
 ## To prevent merge conflicts
 Create a .gitignore file and add in files that should remain in local repo

@@ -28,26 +28,6 @@ function buildParticipantPair(currentUserEmail, peerEmail) {
   };
 }
 
-// Builds a MongoDB filter to find a collaboration session for the given question and participant pair, regardless of email order.
-function buildLookupFilter(questionId, currentUserEmail, peerEmail) {
-  const selfEmail = normaliseEmail(currentUserEmail);
-  const collaboratorEmail = normaliseEmail(peerEmail);
-
-  return {
-    questionId: normaliseQuestionId(questionId),
-    $or: [
-      {
-        collabUser1Email: selfEmail,
-        collabUser2Email: collaboratorEmail,
-      },
-      {
-        collabUser1Email: collaboratorEmail,
-        collabUser2Email: selfEmail,
-      },
-    ],
-  };
-}
-
 // Finds the canonical collaboration session document for a given matchId. This is necessary because multiple sessions may be created for the same matchId due to the way sessions are created and updated. 
 // The canonical session is determined by sorting by _id and taking the first document, which ensures consistency in which session is used for a matchId.
 async function findCanonicalSessionByMatchId(matchId) {
@@ -140,7 +120,7 @@ function buildSessionResponse(document, matchId) {
 }
 
 // Finds an existing collaboration session for the given matchId, questionId, and participant pair. 
-// If no session exists, creates a new one. If a session exists but does not have the matchId, updates it to include the matchId. 
+// If no session exists, creates a new one. A previous draft from another match is not reused, so each new match starts with a blank editor.
 // The operation is performed with a lock on the matchId to prevent race conditions when multiple requests for the same matchId are processed concurrently. 
 async function findOrCreateSession({ matchId, questionId, currentUserEmail, peerEmail }) {
   return withMatchSessionLock(matchId, async () => {
@@ -148,11 +128,6 @@ async function findOrCreateSession({ matchId, questionId, currentUserEmail, peer
 
     if (matchId) {
       session = await findCanonicalSessionByMatchId(matchId);
-    }
-
-    if (!session) {
-      const filter = buildLookupFilter(questionId, currentUserEmail, peerEmail);
-      session = await CollaborationSession.findOne(filter);
     }
 
     if (!session) {
