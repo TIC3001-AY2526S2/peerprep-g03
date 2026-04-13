@@ -24,6 +24,12 @@ const initialQuestion = {
   userRating: 0,
 };
 
+const parseCategories = (value) =>
+  String(value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 function QuestionDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [question, setQuestion] = useState(initialQuestion);
@@ -144,7 +150,7 @@ function QuestionDetail() {
         questionID: Number(draft.questionID),
         title: String(draft.title ?? ""),
         description: String(draft.description ?? ""),
-        category: String(draft.category ?? ""),
+        category: parseCategories(draft.category),
         complexity: String(draft.complexity ?? ""),
       });
 

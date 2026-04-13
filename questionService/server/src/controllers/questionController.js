@@ -80,18 +80,20 @@ export const updateQuestion = async (req, res) => {
     }
 
     const { title, description, complexity } = req.body;
-    const normalizedCategory = validationResult.normalizedCategory;
-    const normalizedCategoryComplexityKey =
-      `${complexity.trim().toLowerCase()}|${[...normalizedCategory].sort().join("|")}`;
+    const normalizedCategories = validationResult.normalizedCategories;
+    const normalizedTitle = title.trim().toLowerCase();
+    const normalizedComplexity = complexity.trim().toLowerCase();
+    const uniqueQuestionKey =
+      `${normalizedTitle}|${normalizedComplexity}|${normalizedCategories.join("|")}`;
 
     const existingQuestion = await Question.findOne({
       _id: { $ne: id },
-      categoryComplexityKey: normalizedCategoryComplexityKey
+      uniqueQuestionKey
     });
 
     if (existingQuestion) {
       return res.status(409).json({
-        error: "A question with the same category set and complexity already exists"
+        error: "A question with the same title, category set and complexity already exists"
       });
     }
 
@@ -103,7 +105,7 @@ export const updateQuestion = async (req, res) => {
 
     question.title = title.trim();
     question.description = description.trim();
-    question.category = normalizedCategory;
+    question.category = normalizedCategories;
     question.complexity = complexity;
 
     const updatedQuestion = await question.save();
@@ -112,9 +114,9 @@ export const updateQuestion = async (req, res) => {
   } catch (error) {
     console.error(error);
 
-    if (error.code === 11000 && error.keyPattern?.categoryComplexityKey) {
+    if (error.code === 11000 && error.keyPattern?.uniqueQuestionKey) {
       return res.status(409).json({
-        error: "A question with the same category set and complexity already exists"
+        error: "A question with the same title, category set and complexity already exists"
       });
     }
 
